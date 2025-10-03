@@ -278,7 +278,7 @@ USER QUESTION: ${userMessage}
 Provide a helpful, conversational response using markdown formatting (bold, italic, lists). Be concise but informative. Focus on investment insights, market analysis, and actionable advice. Use the domain context to give specific recommendations.`
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: {
@@ -423,7 +423,7 @@ USER QUESTION: ${userMessage}
 Provide a helpful, conversational response using markdown formatting (bold, italic, lists). Be concise but informative. Focus on portfolio optimization, diversification strategies, market insights, and actionable investment advice. Analyze the portfolio composition and provide specific recommendations based on the user's holdings.`
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: {
