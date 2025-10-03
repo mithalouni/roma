@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { MessageCircle, X, Send, Sparkles, Briefcase } from 'lucide-react'
+import { X, Send, Sparkles, Briefcase } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { chatWithGeminiStreamForPortfolio } from '../services/geminiService'
 import type { UserDomain } from '../services/domaService'

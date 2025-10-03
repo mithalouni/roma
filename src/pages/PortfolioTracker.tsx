@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Wallet, TrendingUp, DollarSign, BarChart3, AlertCircle, Target, Sparkles, ExternalLink, Lightbulb, LineChart } from 'lucide-react'
+import { Wallet, TrendingUp, DollarSign, BarChart3, AlertCircle, Target, Sparkles, ExternalLink, Lightbulb, LineChart, Heart } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
 import { useUserDomains, useDomainTransactionHistory, useTrendingDomains, useMarketActivity } from '../hooks/useDomaData'
 import { formatCurrency } from '../lib/utils'
@@ -7,13 +7,14 @@ import { Link } from 'react-router-dom'
 import { calculateDomainValueScore } from '../services/domaService'
 import { useAccount } from 'wagmi'
 import type { UserDomain } from '../services/domaService'
-import { LineChart as RechartsLine, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Area, AreaChart } from 'recharts'
+import { XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Area, AreaChart } from 'recharts'
 import { PortfolioAIAdvisor } from '../components/PortfolioAIAdvisor'
+import { FavoritesDomains } from '../components/FavoritesDomains'
 
 export function PortfolioTracker() {
   const { address, isConnected } = useAccount()
   const { data: domains, isLoading, isError } = useUserDomains(address, isConnected)
-  const [activeTab, setActiveTab] = useState<'portfolio' | 'recommendations'>('portfolio')
+  const [activeTab, setActiveTab] = useState<'portfolio' | 'recommendations' | 'favorites'>('portfolio')
 
   if (!isConnected) {
     return (
@@ -84,7 +85,7 @@ export function PortfolioTracker() {
           </Card>
         )}
 
-        {!isLoading && !isError && domains && domains.length > 0 && (
+        {!isLoading && !isError && domains && (
           <>
             {/* Tabs */}
             <div className="flex gap-2 border-b">
@@ -99,6 +100,19 @@ export function PortfolioTracker() {
                 <div className="flex items-center gap-2">
                   <Wallet className="w-4 h-4" />
                   My Portfolio
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('favorites')}
+                className={`px-4 py-2 font-medium transition-colors border-b-2 ${
+                  activeTab === 'favorites'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Heart className="w-4 h-4" />
+                  Favorites
                 </div>
               </button>
               <button
@@ -117,73 +131,75 @@ export function PortfolioTracker() {
             </div>
 
             {activeTab === 'portfolio' ? (
-              <>
-                <PortfolioSummary domains={domains} />
-                <PortfolioValueChart domains={domains} />
+              domains.length > 0 ? (
+                <>
+                  <PortfolioSummary domains={domains} />
+                  <PortfolioValueChart domains={domains} />
 
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <BarChart3 className="w-5 h-5 text-primary" />
+                        Your Domains ({domains.length})
+                      </CardTitle>
+                      <CardDescription>Click on any domain to view detailed analytics</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {domains.map((domain) => (
+                          <PortfolioDomainCard key={domain.tokenId} domain={domain} />
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Portfolio AI Advisor */}
+                  <PortfolioAIAdvisor
+                    portfolioContext={{
+                      totalDomains: domains.length,
+                      totalValue: domains.reduce((sum, d) => sum + d.estimatedValueUsd, 0),
+                      averageValue: domains.reduce((sum, d) => sum + d.estimatedValueUsd, 0) / domains.length,
+                      domains: domains,
+                      topPerformer: domains.reduce((max, d) => d.estimatedValueUsd > max.estimatedValueUsd ? d : max, domains[0]).domainName,
+                      lowestValue: Math.min(...domains.map(d => d.estimatedValueUsd)),
+                      highestValue: Math.max(...domains.map(d => d.estimatedValueUsd)),
+                      tldDistribution: domains.reduce((acc, d) => {
+                        const tld = d.domainName.split('.').pop() || 'unknown'
+                        acc[tld] = (acc[tld] || 0) + 1
+                        return acc
+                      }, {} as Record<string, number>),
+                      totalOffers: domains.reduce((sum, d) => sum + d.highestOfferUsd, 0),
+                    }}
+                  />
+                </>
+              ) : (
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5 text-primary" />
-                      Your Domains ({domains.length})
-                    </CardTitle>
-                    <CardDescription>Click on any domain to view detailed analytics</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {domains.map((domain) => (
-                        <PortfolioDomainCard key={domain.tokenId} domain={domain} />
-                      ))}
+                  <CardContent className="py-12">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <Wallet className="w-16 h-16 text-muted-foreground/50 mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No Domains Found</h3>
+                      <p className="text-muted-foreground max-w-md mb-4">
+                        You don't own any tokenized domains yet. Visit the Doma marketplace to acquire domains.
+                      </p>
+                      <a
+                        href="https://app.doma.xyz"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                      >
+                        Visit Doma Marketplace
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
                     </div>
                   </CardContent>
                 </Card>
-
-                {/* Portfolio AI Advisor */}
-                <PortfolioAIAdvisor
-                  portfolioContext={{
-                    totalDomains: domains.length,
-                    totalValue: domains.reduce((sum, d) => sum + d.estimatedValueUsd, 0),
-                    averageValue: domains.reduce((sum, d) => sum + d.estimatedValueUsd, 0) / domains.length,
-                    domains: domains,
-                    topPerformer: domains.reduce((max, d) => d.estimatedValueUsd > max.estimatedValueUsd ? d : max, domains[0]).domainName,
-                    lowestValue: Math.min(...domains.map(d => d.estimatedValueUsd)),
-                    highestValue: Math.max(...domains.map(d => d.estimatedValueUsd)),
-                    tldDistribution: domains.reduce((acc, d) => {
-                      const tld = d.domainName.split('.').pop() || 'unknown'
-                      acc[tld] = (acc[tld] || 0) + 1
-                      return acc
-                    }, {} as Record<string, number>),
-                    totalOffers: domains.reduce((sum, d) => sum + d.highestOfferUsd, 0),
-                  }}
-                />
-              </>
+              )
+            ) : activeTab === 'favorites' ? (
+              <FavoritesDomains walletAddress={address || ''} />
             ) : (
               <DomainRecommendations userDomains={domains} />
             )}
           </>
-        )}
-
-        {!isLoading && !isError && domains && domains.length === 0 && (
-          <Card>
-            <CardContent className="py-12">
-              <div className="flex flex-col items-center justify-center text-center">
-                <Wallet className="w-16 h-16 text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Domains Found</h3>
-                <p className="text-muted-foreground max-w-md mb-4">
-                  You don't own any tokenized domains yet. Visit the Doma marketplace to acquire domains.
-                </p>
-                <a
-                  href="https://app.doma.xyz"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  Visit Doma Marketplace
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-              </div>
-            </CardContent>
-          </Card>
         )}
       </main>
     </div>
@@ -192,7 +208,6 @@ export function PortfolioTracker() {
 
 function PortfolioSummary({ domains }: { domains: UserDomain[] }) {
   const totalValue = domains.reduce((sum, d) => sum + d.estimatedValueUsd, 0)
-  const avgValue = totalValue / domains.length
   const totalOffers = domains.reduce((sum, d) => sum + d.highestOfferUsd, 0)
   const activeListings = domains.filter(d => d.activeListings > 0).length
 
@@ -333,7 +348,6 @@ function PortfolioValueChart({ domains }: { domains: UserDomain[] }) {
   const chartData = useMemo(() => {
     // Create historical data points based on domain creation dates
     const now = Date.now()
-    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000
 
     // Generate daily data points
     const dataPoints: { date: string; value: number; domains: string[] }[] = []

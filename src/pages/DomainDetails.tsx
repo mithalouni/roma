@@ -1,7 +1,9 @@
 import { useParams, Link } from 'react-router-dom'
 import { useMemo } from 'react'
-import { ArrowLeft, ExternalLink, Clock, User, Shield, Coins, TrendingUp, Package, History, ArrowDownLeft, ArrowUpRight, Tag, Zap, BarChart3, Target } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Clock, User, Shield, Coins, TrendingUp, Package, History, ArrowDownLeft, ArrowUpRight, Tag, Zap, BarChart3, Target, Heart } from 'lucide-react'
+import { useAccount } from 'wagmi'
 import { useDomainSearch, useDomainTransactionHistory } from '../hooks/useDomaData'
+import { useIsFavorited, useAddFavorite, useRemoveFavorite } from '../hooks/useFavorites'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
 import { formatAddress, formatCurrency, formatDateTime } from '../lib/utils'
 import { calculateDomainValueScore } from '../services/domaService'
@@ -28,8 +30,24 @@ const formatNativeAmount = (value: number, symbol: string) => {
 export function DomainDetails() {
   const { domainName } = useParams<{ domainName: string }>()
   const normalizedDomain = domainName?.toLowerCase() || ''
+  const { address, isConnected } = useAccount()
   const { data, isFetching, isError, error } = useDomainSearch(normalizedDomain, Boolean(normalizedDomain))
   const { data: transactionHistory, isFetching: isFetchingHistory } = useDomainTransactionHistory(normalizedDomain, Boolean(normalizedDomain))
+
+  // Favorites functionality
+  const { data: isFavorited } = useIsFavorited(address, normalizedDomain)
+  const addFavorite = useAddFavorite()
+  const removeFavorite = useRemoveFavorite()
+
+  const handleToggleFavorite = () => {
+    if (!address || !normalizedDomain) return
+
+    if (isFavorited) {
+      removeFavorite.mutate({ walletAddress: address, domainName: normalizedDomain })
+    } else {
+      addFavorite.mutate({ walletAddress: address, domainName: normalizedDomain })
+    }
+  }
 
   // Calculate value score
   const valueScore = useMemo(() => {
@@ -68,11 +86,32 @@ export function DomainDetails() {
       </div>
 
       <main className="container py-6 space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">{normalizedDomain}</h1>
-          <p className="text-muted-foreground">
-            Complete on-chain data for this domain from the Doma Protocol
-          </p>
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold tracking-tight">{normalizedDomain}</h1>
+            <p className="text-muted-foreground">
+              Complete on-chain data for this domain from the Doma Protocol
+            </p>
+          </div>
+          {isConnected && address && (
+            <button
+              onClick={handleToggleFavorite}
+              disabled={addFavorite.isPending || removeFavorite.isPending}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                isFavorited
+                  ? 'bg-red-50 border-red-300 text-red-700 hover:bg-red-100 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400'
+                  : 'bg-background border-border text-muted-foreground hover:border-primary hover:text-primary'
+              }`}
+              title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              <Heart
+                className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`}
+              />
+              <span className="text-sm font-medium">
+                {isFavorited ? 'Favorited' : 'Add to Favorites'}
+              </span>
+            </button>
+          )}
         </div>
 
         {isFetching && (
