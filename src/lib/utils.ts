@@ -15,7 +15,10 @@ export function formatNumber(num: number): string {
   return num.toString()
 }
 
-export function formatCurrency(amount: number, currency: string = 'USD'): string {
+export function formatCurrency(amount: number | undefined | null, currency: string = 'USD'): string {
+  if (amount === undefined || amount === null || isNaN(amount)) {
+    return `0.00 ${currency}`
+  }
   return `${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`
 }
 

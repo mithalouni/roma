@@ -1,78 +1,79 @@
 import { useQuery } from '@tanstack/react-query'
-import { getDashboardData, getMarketActivity, searchDomain, getDomainTransactionHistory } from '../services/domaService'
+import { getDashboardData, getMarketActivity, searchDomain, getDomainTransactionHistory, getUserDomains } from '../services/domaService'
+import type { AnalyticsTimeRange } from '../types/analytics'
 
-export const useDashboardStats = () => {
+export const useDashboardStats = (timeRange: AnalyticsTimeRange = '30d') => {
   return useQuery({
-    queryKey: ['dashboard'],
-    queryFn: getDashboardData,
+    queryKey: ['dashboard', timeRange],
+    queryFn: () => getDashboardData(timeRange),
     refetchInterval: 60000,
     staleTime: 30000,
   })
 }
 
-export const useMarketStats = () => {
+export const useMarketStats = (timeRange: AnalyticsTimeRange = '30d') => {
   return useQuery({
-    queryKey: ['dashboard'],
-    queryFn: getDashboardData,
+    queryKey: ['dashboard', timeRange],
+    queryFn: () => getDashboardData(timeRange),
     select: (data) => data.stats,
     refetchInterval: 60000,
     staleTime: 30000,
   })
 }
 
-export const useVolumeSeries = () => {
+export const useVolumeSeries = (timeRange: AnalyticsTimeRange = '30d') => {
   return useQuery({
-    queryKey: ['dashboard'],
-    queryFn: getDashboardData,
+    queryKey: ['dashboard', timeRange],
+    queryFn: () => getDashboardData(timeRange),
     select: (data) => data.series,
     refetchInterval: 60000,
     staleTime: 30000,
   })
 }
 
-export const useMarketActivity = () => {
+export const useMarketActivity = (timeRange: AnalyticsTimeRange = '30d') => {
   return useQuery({
-    queryKey: ['marketActivity'],
-    queryFn: getMarketActivity,
+    queryKey: ['marketActivity', timeRange],
+    queryFn: () => getMarketActivity(timeRange),
     refetchInterval: 45000,
     staleTime: 20000,
   })
 }
 
-export const useTrendingDomains = () => {
+export const useTrendingDomains = (timeRange: AnalyticsTimeRange = '30d') => {
   return useQuery({
-    queryKey: ['marketActivity'],
-    queryFn: getMarketActivity,
+    queryKey: ['marketActivity', timeRange],
+    queryFn: () => getMarketActivity(timeRange),
     select: (data) => data.trendingDomains,
     refetchInterval: 45000,
     staleTime: 20000,
   })
 }
 
-export const useKeywordTrends = () => {
+export const useKeywordTrends = (timeRange: AnalyticsTimeRange = '30d') => {
   return useQuery({
-    queryKey: ['marketActivity'],
-    queryFn: getMarketActivity,
+    queryKey: ['marketActivity', timeRange],
+    queryFn: () => getMarketActivity(timeRange),
     select: (data) => data.keywordTrends,
     refetchInterval: 60000,
     staleTime: 20000,
   })
 }
 
-export const useRecentTransactions = () => {
+export const useRecentTransactions = (timeRange: AnalyticsTimeRange = '30d') => {
   return useQuery({
-    queryKey: ['marketActivity'],
-    queryFn: getMarketActivity,
+    queryKey: ['marketActivity', timeRange],
+    queryFn: () => getMarketActivity(timeRange),
     select: (data) => data.recentTransactions,
     refetchInterval: 30000,
     staleTime: 15000,
   })
 }
 
-export const useTopAccounts = () => {
+export const useTopAccounts = (timeRange: AnalyticsTimeRange = '30d') => {
   return useQuery({
-    queryKey: ['marketActivity'],
-    queryFn: getMarketActivity,
+    queryKey: ['marketActivity', timeRange],
+    queryFn: () => getMarketActivity(timeRange),
     select: (data) => ({ buyers: data.topBuyers, sellers: data.topSellers }),
     refetchInterval: 60000,
     staleTime: 30000,
@@ -100,5 +101,18 @@ export const useDomainTransactionHistory = (domainName: string, enabled: boolean
     enabled: enabled && normalized.length > 0,
     retry: false,
     staleTime: 30000,
+  })
+}
+
+export const useUserDomains = (walletAddress: string | undefined, enabled = true) => {
+  const normalized = walletAddress?.trim().toLowerCase() ?? ''
+
+  return useQuery({
+    queryKey: ['userDomains', normalized],
+    queryFn: () => getUserDomains(normalized),
+    enabled: enabled && normalized.length > 0,
+    retry: 1,
+    staleTime: 30000,
+    refetchInterval: 60000, // Refresh every minute
   })
 }

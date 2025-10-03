@@ -1,5 +1,6 @@
-import { BarChart3, Github, TrendingUp, Home } from 'lucide-react'
+import { BarChart3, Github, TrendingUp, Home, LineChart, Trophy, Wallet } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
+import { WalletConnect } from './WalletConnect'
 
 export function Header() {
   const location = useLocation()
@@ -40,9 +41,43 @@ export function Header() {
               <TrendingUp className="h-4 w-4" />
               Trending
             </Link>
+            <Link
+              to="/analytics"
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                location.pathname === '/analytics'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              <LineChart className="h-4 w-4" />
+              Analytics
+            </Link>
+            <Link
+              to="/performers"
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                location.pathname === '/performers'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              <Trophy className="h-4 w-4" />
+              Top Performers
+            </Link>
+            <Link
+              to="/portfolio"
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                location.pathname === '/portfolio'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              <Wallet className="h-4 w-4" />
+              Portfolio
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-4">
+          <WalletConnect />
           <a
             href="https://docs.doma.xyz"
             target="_blank"

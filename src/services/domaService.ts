@@ -1,3 +1,5 @@
+import type { AnalyticsTimeRange } from '../types/analytics'
+
 // Doma API Configuration
 const SUBGRAPH_URL = import.meta.env.VITE_DOMA_SUBGRAPH_URL || 'https://api-testnet.doma.xyz/graphql'
 const DOMA_API_KEY = import.meta.env.VITE_DOMA_API_KEY
@@ -219,6 +221,39 @@ const calculatePercentChange = (current: number, previous: number) => {
   return ((current - previous) / previous) * 100
 }
 
+type StatisticsTimeRange =
+  | 'LAST_1_HOUR'
+  | 'LAST_7_HOURS'
+  | 'LAST_1_DAY'
+  | 'LAST_7_DAYS'
+  | 'LAST_14_DAYS'
+  | 'LAST_30_DAYS'
+  | 'ALL'
+
+const analyticsRangeToStatisticsRange: Record<AnalyticsTimeRange, StatisticsTimeRange> = {
+  '1h': 'LAST_7_HOURS',
+  '24h': 'LAST_1_DAY',
+  '7d': 'LAST_7_DAYS',
+  '30d': 'LAST_30_DAYS',
+  '1y': 'ALL',
+}
+
+const analyticsRangeDurationsMs: Record<AnalyticsTimeRange, number> = {
+  '1h': 60 * 60 * 1000,
+  '24h': 24 * 60 * 60 * 1000,
+  '7d': 7 * 24 * 60 * 60 * 1000,
+  '30d': 30 * 24 * 60 * 60 * 1000,
+  '1y': 365 * 24 * 60 * 60 * 1000,
+}
+
+const analyticsRangeTakeLimit: Record<AnalyticsTimeRange, number> = {
+  '1h': 200,
+  '24h': 400,
+  '7d': 600,
+  '30d': 800,
+  '1y': 1000,
+}
+
 const extractKeywords = (domainName: string) => {
   const lower = domainName.toLowerCase()
   const withoutTld = lower.includes('.') ? lower.split('.')[0] : lower
@@ -324,7 +359,7 @@ const getMockMarketActivity = (): MarketActivityData => {
 
 // ===== Real data functions =====
 
-export const getDashboardData = async (): Promise<DashboardData> => {
+export const getDashboardData = async (analyticsRange: AnalyticsTimeRange = '30d'): Promise<DashboardData> => {
   try {
     const query = `
       query GetDashboardData($timeRange: StatisticsTimeRange!) {
@@ -352,7 +387,8 @@ export const getDashboardData = async (): Promise<DashboardData> => {
       }
     `
 
-    const data = await querySubgraph(query, { timeRange: 'LAST_30_DAYS' })
+    const statisticsRange = analyticsRangeToStatisticsRange[analyticsRange] ?? 'LAST_30_DAYS'
+    const data = await querySubgraph(query, { timeRange: statisticsRange })
 
     const statistics = data?.statistics
     const chainStatistics = data?.chainStatistics
@@ -425,10 +461,14 @@ export const getDashboardData = async (): Promise<DashboardData> => {
   }
 }
 
-export const getMarketActivity = async (): Promise<MarketActivityData> => {
+export const getMarketActivity = async (analyticsRange: AnalyticsTimeRange = '30d'): Promise<MarketActivityData> => {
   try {
     const now = Date.now()
-    const fourteenDaysAgo = new Date(now - 14 * 24 * 60 * 60 * 1000).toISOString()
+    const rangeDurationMs = analyticsRangeDurationsMs[analyticsRange] ?? analyticsRangeDurationsMs['30d']
+    const fetchMultiplier = analyticsRange === '1h' ? 6 : analyticsRange === '24h' ? 3 : 2
+    const fetchWindowMs = rangeDurationMs * fetchMultiplier
+    const fromDate = new Date(now - fetchWindowMs).toISOString()
+    const take = analyticsRangeTakeLimit[analyticsRange] ?? 800
 
     const query = `
       query GetMarketActivity($fromDate: DateTime!, $take: Int!) {
@@ -469,19 +509,28 @@ export const getMarketActivity = async (): Promise<MarketActivityData> => {
       }
     `
 
-    const data = await querySubgraph(query, { fromDate: fourteenDaysAgo, take: 100 })
+    const data = await querySubgraph(query, { fromDate, take })
     const activities = data?.tokenActivities?.items ?? []
 
     if (activities.length === 0) {
       return getMockMarketActivity()
     }
 
-    const purchases = activities.filter((item: any) => item.__typename === 'TokenPurchasedActivity')
+    const purchases = activities
+      .filter((item: any) => item.__typename === 'TokenPurchasedActivity')
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
-    const currentWindowStart = now - 7 * 24 * 60 * 60 * 1000
-    const previousWindowStart = now - 14 * 24 * 60 * 60 * 1000
+    if (purchases.length === 0) {
+      return getMockMarketActivity()
+    }
 
-    const recentTransactions: DomainTransaction[] = purchases.slice(0, 15).map((tx: any) => ({
+    const currentWindowStart = now - rangeDurationMs
+    const previousWindowStart = now - rangeDurationMs * 2
+
+    const recentTransactionsRaw = purchases.filter((purchase: any) => new Date(purchase.createdAt).getTime() >= currentWindowStart)
+    const transactionSource = recentTransactionsRaw.length > 0 ? recentTransactionsRaw : purchases.slice(0, 25)
+
+    const recentTransactions: DomainTransaction[] = transactionSource.slice(0, 25).map((tx: any) => ({
       id: tx.id,
       domainName: tx.name,
       priceUsd: parseUsdFromPayment(tx.payment),
@@ -509,18 +558,12 @@ export const getMarketActivity = async (): Promise<MarketActivityData> => {
       const timestampMs = new Date(purchase.createdAt).getTime()
       const domainName = purchase.name ?? 'unknown'
 
+      if (timestampMs < previousWindowStart) {
+        return
+      }
+
       const buyer = normalizeAddress(purchase.buyer)
       const seller = normalizeAddress(purchase.seller)
-
-      const buyerEntry = buyerStats.get(buyer) ?? { volume: 0, count: 0 }
-      buyerEntry.volume += volumeUsd
-      buyerEntry.count += 1
-      buyerStats.set(buyer, buyerEntry)
-
-      const sellerEntry = sellerStats.get(seller) ?? { volume: 0, count: 0 }
-      sellerEntry.volume += volumeUsd
-      sellerEntry.count += 1
-      sellerStats.set(seller, sellerEntry)
 
       const domainEntry = domainStats.get(domainName) ?? {
         currentVolume: 0,
@@ -530,6 +573,16 @@ export const getMarketActivity = async (): Promise<MarketActivityData> => {
       }
 
       if (timestampMs >= currentWindowStart) {
+        const buyerEntry = buyerStats.get(buyer) ?? { volume: 0, count: 0 }
+        buyerEntry.volume += volumeUsd
+        buyerEntry.count += 1
+        buyerStats.set(buyer, buyerEntry)
+
+        const sellerEntry = sellerStats.get(seller) ?? { volume: 0, count: 0 }
+        sellerEntry.volume += volumeUsd
+        sellerEntry.count += 1
+        sellerStats.set(seller, sellerEntry)
+
         domainEntry.currentVolume += volumeUsd
         domainEntry.currentCount += 1
 
@@ -784,6 +837,19 @@ export interface DomainValueScore {
     weaknesses: string[]
     insights: string[]
   }
+}
+
+export interface UserDomain {
+  domainName: string
+  tokenId: string
+  owner: string
+  chainId: string
+  createdAt: string
+  expiresAt: string
+  activeListings: number
+  highestOfferUsd: number
+  estimatedValueUsd: number
+  isFractionalized: boolean
 }
 
 export const calculateDomainValueScore = (
@@ -1113,6 +1179,84 @@ export const getDomainTransactionHistory = async (domainName: string): Promise<D
     return history.sort((a, b) => b.timestamp - a.timestamp)
   } catch (error) {
     console.error('Error fetching domain transaction history:', error)
+    return []
+  }
+}
+
+export const getUserDomains = async (walletAddress: string): Promise<UserDomain[]> => {
+  if (!walletAddress) return []
+
+  // Format address in CAIP-10 format (eip155:<chainId>:<address>)
+  const caipAddress = `eip155:97476:${walletAddress.toLowerCase()}`
+
+  const query = `
+    query GetUserDomains($owners: [AddressCAIP10!]!) {
+      names(ownedBy: $owners, claimStatus: ALL, take: 100) {
+        items {
+          name
+          expiresAt
+          tokenizedAt
+          isFractionalized
+          activeOffersCount
+          highestOffer {
+            price
+            currency {
+              symbol
+              decimals
+              usdExchangeRate
+            }
+          }
+          tokens {
+            tokenId
+            ownerAddress
+            createdAt
+            type
+            chain {
+              networkId
+            }
+            listings {
+              id
+            }
+          }
+        }
+      }
+    }
+  `
+
+  try {
+    const data = await querySubgraph(query, { owners: [caipAddress] })
+    const nameItems = data?.names?.items ?? []
+
+    const domains: UserDomain[] = nameItems
+      .filter((item: any) => item.tokens && item.tokens.length > 0)
+      .map((item: any) => {
+        // Get the ownership token (type: OWNERSHIP)
+        const token = item.tokens.find((t: any) => t.type === 'OWNERSHIP') || item.tokens[0]
+        const highestOffer = item.highestOffer
+        const highestOfferUsd = highestOffer
+          ? parseCurrencyAmount(highestOffer.price, highestOffer.currency).usd
+          : 0
+
+        // Simple valuation: use highest offer or estimate based on domain quality
+        const estimatedValue = highestOfferUsd > 0 ? highestOfferUsd : 100 // Default minimum value
+
+        return {
+          domainName: item.name,
+          tokenId: token.tokenId,
+          owner: normalizeAddress(token.ownerAddress),
+          chainId: token.chain?.networkId ?? 'unknown',
+          createdAt: token.createdAt,
+          expiresAt: item.expiresAt ?? '',
+          activeListings: (token.listings ?? []).length,
+          highestOfferUsd,
+          estimatedValueUsd: estimatedValue,
+          isFractionalized: Boolean(item.isFractionalized),
+        }
+      })
+
+    return domains
+  } catch (error) {
+    console.error('Error fetching user domains:', error)
     return []
   }
 }

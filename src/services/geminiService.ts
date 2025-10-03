@@ -228,7 +228,24 @@ Provide a helpful, conversational response. Be concise but informative. Focus on
   }
 }
 
-export const chatWithGeminiStream = async (
+export interface PortfolioContext {
+  totalDomains: number
+  totalValue: number
+  averageValue: number
+  domains: Array<{
+    domainName: string
+    estimatedValueUsd: number
+    highestOfferUsd: number
+    activeListings: number
+  }>
+  topPerformer: string
+  lowestValue: number
+  highestValue: number
+  tldDistribution: Record<string, number>
+  totalOffers: number
+}
+
+export const chatWithGeminiStreamForDomain = async (
   userMessage: string,
   domainContext: DomainContext,
   conversationHistory: Array<{ role: string; content: string }>,
@@ -348,6 +365,151 @@ Provide a helpful, conversational response using markdown formatting (bold, ital
     }
   } catch (error) {
     console.error('Error streaming with Gemini:', error)
+    throw error
+  }
+}
+
+// Backward compatibility alias
+export const chatWithGeminiStream = chatWithGeminiStreamForDomain
+
+export const chatWithGeminiStreamForPortfolio = async (
+  userMessage: string,
+  portfolioContext: PortfolioContext,
+  conversationHistory: Array<{ role: string; content: string }>,
+  onChunk: (chunk: string) => void
+): Promise<void> => {
+  if (!GEMINI_API_KEY) {
+    throw new Error('Gemini API key not configured')
+  }
+
+  try {
+    // Build TLD distribution summary
+    const tldSummary = Object.entries(portfolioContext.tldDistribution)
+      .map(([tld, count]) => `${tld}: ${count}`)
+      .join(', ')
+
+    // Build domain list summary
+    const domainListSummary = portfolioContext.domains
+      .map(d => `${d.domainName} ($${d.estimatedValueUsd.toFixed(2)}, ${d.activeListings} listings, best offer: $${d.highestOfferUsd.toFixed(2)})`)
+      .join('\n')
+
+    // Calculate diversification metrics
+    const uniqueTlds = Object.keys(portfolioContext.tldDistribution).length
+    const diversificationScore = (uniqueTlds / portfolioContext.totalDomains * 100).toFixed(1)
+
+    // Build context prompt
+    const contextPrompt = `You are an AI Portfolio Advisor for domain investments on the Doma Protocol blockchain marketplace.
+
+PORTFOLIO OVERVIEW:
+- Total Domains: ${portfolioContext.totalDomains}
+- Total Portfolio Value: $${portfolioContext.totalValue.toFixed(2)}
+- Average Domain Value: $${portfolioContext.averageValue.toFixed(2)}
+- Value Range: $${portfolioContext.lowestValue.toFixed(2)} - $${portfolioContext.highestValue.toFixed(2)}
+- Top Performer: ${portfolioContext.topPerformer}
+- Total Offers Received: $${portfolioContext.totalOffers.toFixed(2)}
+
+TLD DISTRIBUTION:
+${tldSummary}
+- Diversification Score: ${diversificationScore}% (${uniqueTlds} different TLDs)
+
+PORTFOLIO HOLDINGS:
+${domainListSummary}
+
+CONVERSATION HISTORY:
+${conversationHistory.map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`).join('\n')}
+
+USER QUESTION: ${userMessage}
+
+Provide a helpful, conversational response using markdown formatting (bold, italic, lists). Be concise but informative. Focus on portfolio optimization, diversification strategies, market insights, and actionable investment advice. Analyze the portfolio composition and provide specific recommendations based on the user's holdings.`
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: contextPrompt,
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 2048,
+            responseMimeType: 'text/plain',
+          },
+          safetySettings: [
+            {
+              category: 'HARM_CATEGORY_HARASSMENT',
+              threshold: 'BLOCK_NONE',
+            },
+            {
+              category: 'HARM_CATEGORY_HATE_SPEECH',
+              threshold: 'BLOCK_NONE',
+            },
+            {
+              category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+              threshold: 'BLOCK_NONE',
+            },
+            {
+              category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+              threshold: 'BLOCK_NONE',
+            },
+          ],
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Gemini API error:', response.status, errorText)
+      throw new Error(`Gemini API failed: ${response.statusText}`)
+    }
+
+    if (!response.body) {
+      throw new Error('No response body from Gemini API')
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || '' // Keep incomplete line in buffer
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6).trim()
+          if (data === '[DONE]') continue
+
+          try {
+            const json = JSON.parse(data)
+            const text = json.candidates?.[0]?.content?.parts?.[0]?.text
+            if (text) {
+              onChunk(text)
+            }
+          } catch (e) {
+            // Skip invalid JSON
+            continue
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error streaming portfolio chat with Gemini:', error)
     throw error
   }
 }
