@@ -3,6 +3,7 @@ import type { AnalyticsTimeRange } from '../types/analytics'
 // Doma API Configuration
 const SUBGRAPH_URL = import.meta.env.VITE_DOMA_SUBGRAPH_URL || 'https://api-testnet.doma.xyz/graphql'
 const DOMA_API_KEY = import.meta.env.VITE_DOMA_API_KEY
+const EXPLORER_API_URL = 'https://explorer-testnet.doma.xyz/api/v2'
 
 // GraphQL query helper
 const querySubgraph = async (query: string, variables?: Record<string, any>) => {
@@ -37,6 +38,16 @@ const querySubgraph = async (query: string, variables?: Record<string, any>) => 
 }
 
 // ===== Types =====
+
+export interface NetworkStats {
+  totalBlocks: number
+  totalTransactions: number
+  totalAddresses: number
+  transactionsToday: number
+  averageBlockTime: number
+  gasUsedToday: number
+  networkUtilization: number
+}
 
 export interface MarketStats {
   totalVolume: number
@@ -261,6 +272,39 @@ const extractKeywords = (domainName: string) => {
   return rawTokens
     .map((token) => token.trim())
     .filter((token) => token.length >= 3 && /^[a-z0-9]+$/.test(token))
+}
+
+// Fetch network statistics from explorer API
+export const getNetworkStats = async (): Promise<NetworkStats> => {
+  try {
+    const response = await fetch(`${EXPLORER_API_URL}/stats`)
+    if (!response.ok) {
+      throw new Error(`Explorer API error: ${response.statusText}`)
+    }
+    const data = await response.json()
+
+    return {
+      totalBlocks: Number(data.total_blocks ?? 0),
+      totalTransactions: Number(data.total_transactions ?? 0),
+      totalAddresses: Number(data.total_addresses ?? 0),
+      transactionsToday: Number(data.transactions_today ?? 0),
+      averageBlockTime: Number(data.average_block_time ?? 0) / 1000, // Convert ms to seconds
+      gasUsedToday: Number(data.gas_used_today ?? 0),
+      networkUtilization: Number(data.network_utilization_percentage ?? 0),
+    }
+  } catch (error) {
+    console.error('Error fetching network stats:', error)
+    // Return mock data as fallback
+    return {
+      totalBlocks: 11513445,
+      totalTransactions: 17212378,
+      totalAddresses: 855770,
+      transactionsToday: 482590,
+      averageBlockTime: 2.0,
+      gasUsedToday: 47716308270,
+      networkUtilization: 3.56,
+    }
+  }
 }
 
 const getMockDashboardData = (): DashboardData => {

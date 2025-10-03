@@ -257,10 +257,16 @@ export function MarketAnalytics() {
             <div>
               <h1 className="text-4xl font-bold tracking-tight flex items-center gap-3">
                 <BarChart3 className="w-8 h-8 text-blue-600" />
-                Market Analytics
+                Domain Marketplace Analytics
               </h1>
               <p className="text-muted-foreground mt-2">
-                Deep dive into Doma Protocol market trends, pricing patterns, and trading activity
+                Deep dive into domain trading trends, pricing patterns, and marketplace activity
+              </p>
+              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">
+                  Domain Marketplace Data
+                </span>
+                <span>Showing domain-specific transactions from the Doma marketplace (not total blockchain transactions)</span>
               </p>
             </div>
 
@@ -310,8 +316,37 @@ export function MarketAnalytics() {
 
         {!isLoading && dashboardData && activityData && marketMetrics && (
           <>
+            {/* All-Time Marketplace Summary */}
+            <Card className="border-l-4 border-l-blue-600">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <DollarSign className="w-5 h-5 text-blue-600" />
+                  Domain Marketplace - All-Time Stats
+                </CardTitle>
+                <CardDescription>Total activity on the Doma domain marketplace</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div>
+                    <div className="text-2xl font-bold">{formatCurrency(dashboardData.stats.totalVolume)}</div>
+                    <div className="text-sm text-muted-foreground">Total Trading Volume</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">{dashboardData.stats.totalTransactions.toLocaleString()}</div>
+                    <div className="text-sm text-muted-foreground">Total Domain Transactions</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">{dashboardData.stats.activeDomains.toLocaleString()}</div>
+                    <div className="text-sm text-muted-foreground">Active Domains</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Key Metrics */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Filtered Period Metrics ({timeRangeLabels[timeRange]})</h3>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription>{timeRangeLabels[timeRange]} Volume</CardDescription>
@@ -365,6 +400,7 @@ export function MarketAnalytics() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
             </div>
 
             {/* Price Distribution */}

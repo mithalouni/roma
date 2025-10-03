@@ -1,6 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
-import { getDashboardData, getMarketActivity, searchDomain, getDomainTransactionHistory, getUserDomains } from '../services/domaService'
+import { getDashboardData, getMarketActivity, searchDomain, getDomainTransactionHistory, getUserDomains, getNetworkStats } from '../services/domaService'
 import type { AnalyticsTimeRange } from '../types/analytics'
+
+export const useNetworkStats = () => {
+  return useQuery({
+    queryKey: ['networkStats'],
+    queryFn: () => getNetworkStats(),
+    refetchInterval: 30000, // Refresh every 30s
+    staleTime: 15000,
+  })
+}
 
 export const useDashboardStats = (timeRange: AnalyticsTimeRange = '30d') => {
   return useQuery({
