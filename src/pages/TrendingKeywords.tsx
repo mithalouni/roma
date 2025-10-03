@@ -202,31 +202,31 @@ export function TrendingKeywords() {
                         </div>
 
                         <div className="grid md:grid-cols-3 gap-4">
-                          <div className="rounded-md bg-green-50 dark:bg-green-900/20 p-3 border border-green-200 dark:border-green-700">
-                            <h4 className="text-sm font-semibold !text-black dark:!text-gray-100 mb-2">
+                          <div className="rounded-md bg-green-50 dark:bg-green-900/20 p-3 border border-green-200 dark:border-green-700 text-black dark:text-black">
+                            <h4 className="text-sm font-semibold text-black mb-2">
                               Potential Value
                             </h4>
-                            <p className="text-sm font-bold !text-black dark:!text-gray-100">
+                            <p className="text-sm font-bold text-black">
                               {rec.potentialValue}
                             </p>
                           </div>
-                          <div className="rounded-md bg-blue-50 dark:bg-blue-900/20 p-3 border border-blue-200 dark:border-blue-700">
-                            <h4 className="text-sm font-semibold !text-black dark:!text-gray-100 mb-2">
+                          <div className="rounded-md bg-blue-50 dark:bg-blue-900/20 p-3 border border-blue-200 dark:border-blue-700 text-black dark:text-black">
+                            <h4 className="text-sm font-semibold text-black mb-2">
                               Opportunities
                             </h4>
-                            <ul className="text-sm !text-black dark:!text-gray-100 space-y-1">
+                            <ul className="text-sm text-black space-y-1">
                               {rec.opportunities.slice(0, 2).map((opp, i) => (
-                                <li key={i} className="!text-black dark:!text-gray-100">• {opp}</li>
+                                <li key={i} className="text-black dark:text-black">• {opp}</li>
                               ))}
                             </ul>
                           </div>
-                          <div className="rounded-md bg-orange-50 dark:bg-orange-900/20 p-3 border border-orange-200 dark:border-orange-700">
-                            <h4 className="text-sm font-semibold !text-black dark:!text-gray-100 mb-2">
+                          <div className="rounded-md bg-orange-50 dark:bg-orange-900/20 p-3 border border-orange-200 dark:border-orange-700 text-black dark:text-black">
+                            <h4 className="text-sm font-semibold text-black mb-2">
                               Risks
                             </h4>
-                            <ul className="text-sm !text-black dark:!text-gray-100 space-y-1">
+                            <ul className="text-sm text-black space-y-1">
                               {rec.risks.slice(0, 2).map((risk, i) => (
-                                <li key={i} className="!text-black dark:!text-gray-100">• {risk}</li>
+                                <li key={i} className="text-black dark:text-black">• {risk}</li>
                               ))}
                             </ul>
                           </div>

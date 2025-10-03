@@ -232,19 +232,161 @@ Guidelines:
   }
 }
 
+const getFallbackData = (): TrendingAnalysis => ({
+  keywords: [
+    {
+      keyword: 'AI',
+      category: 'Technology',
+      trend: 'hot',
+      relevance: 95,
+      description: 'Artificial intelligence continues dominating tech and business discussions'
+    },
+    {
+      keyword: 'Quantum',
+      category: 'Technology',
+      trend: 'rising',
+      relevance: 88,
+      description: 'Quantum computing breakthroughs gaining mainstream attention'
+    },
+    {
+      keyword: 'DeFi',
+      category: 'Finance',
+      trend: 'stable',
+      relevance: 82,
+      description: 'Decentralized finance remains core blockchain use case'
+    },
+    {
+      keyword: 'Climate',
+      category: 'Science',
+      trend: 'rising',
+      relevance: 79,
+      description: 'Climate tech and sustainability solutions trending globally'
+    },
+    {
+      keyword: 'Web3',
+      category: 'Technology',
+      trend: 'hot',
+      relevance: 85,
+      description: 'Web3 infrastructure and applications gaining adoption'
+    }
+  ],
+  recommendations: [
+    {
+      domainName: 'aiagent.eth',
+      keyword: 'AI',
+      score: 92,
+      reasoning: 'AI agents are the next frontier in automation. Perfect brandable domain for AI services, agent platforms, and automation tools.',
+      potentialValue: '$10,000 - $100,000',
+      marketFit: 'AI startups, automation services, agent platforms, SaaS companies',
+      risks: ['Highly competitive market', 'Regulatory uncertainty in AI'],
+      opportunities: ['Explosive growth in AI sector', 'Multiple high-value use cases']
+    },
+    {
+      domainName: 'quantumdao.eth',
+      keyword: 'Quantum',
+      score: 85,
+      reasoning: 'Combines quantum computing with DAO governance. Unique positioning for research communities and quantum computing DAOs.',
+      potentialValue: '$5,000 - $50,000',
+      marketFit: 'Quantum research DAOs, tech communities, academic institutions',
+      risks: ['Niche market', 'Technology still emerging'],
+      opportunities: ['First mover advantage', 'Growing institutional interest']
+    },
+    {
+      domainName: 'defibank.eth',
+      keyword: 'DeFi',
+      score: 88,
+      reasoning: 'Banking meets DeFi. Strong keyword combination for financial services targeting crypto-native users.',
+      potentialValue: '$8,000 - $80,000',
+      marketFit: 'DeFi protocols, crypto banking, yield platforms',
+      risks: ['Regulatory challenges', 'Market volatility'],
+      opportunities: ['Traditional finance adoption of DeFi', 'High demand keyword']
+    },
+    {
+      domainName: 'climateai.eth',
+      keyword: 'Climate',
+      score: 81,
+      reasoning: 'AI-powered climate solutions combining two mega trends. Appeals to ESG investors and climate tech startups.',
+      potentialValue: '$6,000 - $60,000',
+      marketFit: 'Climate tech startups, ESG platforms, carbon credit markets',
+      risks: ['Longer sales cycle', 'Requires specialized buyer'],
+      opportunities: ['Growing ESG mandates', 'Climate tech funding boom']
+    },
+    {
+      domainName: 'web3dev.eth',
+      keyword: 'Web3',
+      score: 87,
+      reasoning: 'Developer-focused Web3 domain. Perfect for dev tools, communities, and educational platforms in the Web3 space.',
+      potentialValue: '$7,000 - $70,000',
+      marketFit: 'Developer tools, Web3 education, coding bootcamps, dev communities',
+      risks: ['Competitive developer tooling space'],
+      opportunities: ['Strong developer demand', 'Multiple monetization paths']
+    },
+    {
+      domainName: 'nftmarket.eth',
+      keyword: 'NFT',
+      score: 79,
+      reasoning: 'Direct, memorable domain for NFT marketplaces. Despite market corrections, NFT infrastructure continues to grow.',
+      potentialValue: '$5,000 - $45,000',
+      marketFit: 'NFT marketplaces, gaming platforms, digital collectibles',
+      risks: ['Market saturation', 'NFT market volatility'],
+      opportunities: ['Established keyword', 'Diverse use cases']
+    },
+    {
+      domainName: 'metaverse.ai',
+      keyword: 'Metaverse',
+      score: 76,
+      reasoning: 'AI-powered metaverse experiences. Combines two trending sectors with strong brand recognition.',
+      potentialValue: '$5,000 - $40,000',
+      marketFit: 'Metaverse platforms, VR/AR companies, gaming studios',
+      risks: ['Metaverse hype cycle concerns', 'Technology still maturing'],
+      opportunities: ['Major tech company investment', 'Long-term growth potential']
+    },
+    {
+      domainName: 'zkproof.eth',
+      keyword: 'ZK',
+      score: 84,
+      reasoning: 'Zero-knowledge proofs are critical for blockchain scalability and privacy. Technical but valuable domain.',
+      potentialValue: '$6,000 - $55,000',
+      marketFit: 'ZK rollup protocols, privacy platforms, blockchain infrastructure',
+      risks: ['Technical domain limits buyer pool'],
+      opportunities: ['ZK tech essential for blockchain scaling', 'Growing developer interest']
+    }
+  ],
+  marketInsights: 'AI and Web3 domains continue to dominate investor interest. Emerging sectors like quantum computing and climate tech showing strong growth potential. Recommended focus: short, brandable domains combining trending keywords with established TLDs.',
+  timestamp: Date.now(),
+})
+
 export const getTrendingKeywordsAndRecommendations = async (): Promise<TrendingAnalysis> => {
   try {
     // Step 1: Fetch real trending news from NewsAPI.org
     console.log('Fetching trending news from NewsAPI.org...')
     const articles = await fetchTrendingNews()
 
+    // If NewsAPI fails, go straight to fallback
+    if (articles.length === 0) {
+      console.warn('NewsAPI returned no articles, using fallback data')
+      return getFallbackData()
+    }
+
     // Step 2: Extract keywords from news using Gemini
     console.log('Extracting keywords from news articles...')
     const keywords = await extractKeywordsFromNews(articles)
 
+    // If Gemini fails for keywords, use fallback
+    if (keywords.length === 0) {
+      console.warn('Gemini keyword extraction failed, using fallback data')
+      return getFallbackData()
+    }
+
     // Step 3: Generate domain recommendations using Gemini
     console.log('Generating domain recommendations...')
     const recommendations = await generateDomainRecommendations(keywords)
+
+    // If Gemini fails for recommendations, use fallback
+    if (recommendations.length === 0) {
+      console.warn('Gemini recommendation generation failed, using fallback data')
+      return getFallbackData()
+    }
 
     // Step 4: Generate market insights
     const marketInsights = keywords.length > 0
@@ -259,56 +401,6 @@ export const getTrendingKeywordsAndRecommendations = async (): Promise<TrendingA
     }
   } catch (error) {
     console.error('Error getting trending analysis:', error)
-
-    // Return fallback data
-    return {
-      keywords: [
-        {
-          keyword: 'AI',
-          category: 'Technology',
-          trend: 'hot',
-          relevance: 95,
-          description: 'Artificial intelligence continues dominating tech and business discussions'
-        },
-        {
-          keyword: 'Quantum',
-          category: 'Technology',
-          trend: 'rising',
-          relevance: 80,
-          description: 'Quantum computing breakthroughs gaining mainstream attention'
-        },
-        {
-          keyword: 'DeFi',
-          category: 'Finance',
-          trend: 'stable',
-          relevance: 75,
-          description: 'Decentralized finance remains core blockchain use case'
-        }
-      ],
-      recommendations: [
-        {
-          domainName: 'aiagent.eth',
-          keyword: 'AI',
-          score: 92,
-          reasoning: 'AI agents are the next frontier. Perfect brandable domain for AI services.',
-          potentialValue: '$10,000 - $100,000',
-          marketFit: 'AI startups, automation services, agent platforms',
-          risks: ['Competitive market', 'Regulatory uncertainty'],
-          opportunities: ['High demand sector', 'Multiple use cases']
-        },
-        {
-          domainName: 'quantumdao.eth',
-          keyword: 'Quantum',
-          score: 85,
-          reasoning: 'Combines quantum computing with DAO governance. Unique positioning.',
-          potentialValue: '$5,000 - $50,000',
-          marketFit: 'Quantum research DAOs, tech communities',
-          risks: ['Niche market', 'Early technology'],
-          opportunities: ['First mover advantage', 'Growing interest']
-        }
-      ],
-      marketInsights: 'Technology domains remain hottest sector. AI and quantum keywords showing strongest growth potential.',
-      timestamp: Date.now(),
-    }
+    return getFallbackData()
   }
 }
