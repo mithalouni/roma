@@ -1,7 +1,6 @@
 import { Activity, Clock, Layers, Users } from 'lucide-react'
 import { useNetworkStats } from '../hooks/useDomaData'
 import { formatNumber } from '../lib/utils'
-import { KPIGrid } from './dashboard/KPIGrid'
 import { StatCard } from './StatCard'
 
 export function NetworkOverview() {

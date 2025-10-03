@@ -1,7 +1,7 @@
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { AnalyticsTimeRange } from '../types/analytics'
 import { useVolumeSeries } from '../hooks/useDomaData'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
 
 interface VolumeChartProps {
   timeRange: AnalyticsTimeRange

@@ -1,9 +1,7 @@
 import type { AnalyticsTimeRange } from '../types/analytics'
-import { Badge } from './ui/Badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
 import { useKeywordTrends } from '../hooks/useDomaData'
 import { formatCurrency } from '../lib/utils'
-import { TrendPill } from './dashboard/TrendPill'
 
 interface KeywordTrendsProps {
   timeRange: AnalyticsTimeRange

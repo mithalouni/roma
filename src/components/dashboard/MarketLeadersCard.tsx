@@ -2,7 +2,7 @@ import * as Tabs from '@radix-ui/react-tabs'
 import { useMemo } from 'react'
 import type { TopAccount } from '../../services/domaService'
 import { formatAddress, formatCurrency } from '../../lib/utils'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/Card'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card'
 
 interface MarketLeadersCardProps {
   buyers?: TopAccount[]

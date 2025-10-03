@@ -1,4 +1,4 @@
-import { Activity, DollarSign, Layers, Users } from 'lucide-react'
+import { Activity, DollarSign, Layers } from 'lucide-react'
 import type { AnalyticsTimeRange } from '../types/analytics'
 import { useMarketStats } from '../hooks/useDomaData'
 import { formatCurrency, formatNumber } from '../lib/utils'

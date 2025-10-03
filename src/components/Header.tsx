@@ -1,4 +1,4 @@
-import { BarChart3, Search, TrendingUp, LineChart, Trophy } from 'lucide-react'
+import { Search, TrendingUp, LineChart, Trophy } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import type { FormEvent } from 'react'
 import { useState } from 'react'

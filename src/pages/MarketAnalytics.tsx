@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, PieChart, Users, Clock, LoaderCircle } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, PieChart, Users, LoaderCircle } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
 import { useDashboardStats, useMarketActivity } from '../hooks/useDomaData'
 import { formatCurrency } from '../lib/utils'

@@ -3,7 +3,7 @@ import type { HTMLAttributes, KeyboardEvent, MouseEvent } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { TrendPill } from './dashboard/TrendPill'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
 
 interface StatCardProps extends HTMLAttributes<HTMLDivElement> {
   title: string

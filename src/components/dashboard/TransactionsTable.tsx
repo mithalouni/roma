@@ -2,7 +2,7 @@ import { ExternalLink, Layers, LoaderCircle, ChevronLeft, ChevronRight } from 'l
 import { useState } from 'react'
 import type { DomainTransaction } from '../../services/domaService'
 import { formatAddress, formatCurrency, formatDateTime } from '../../lib/utils'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/Card'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card'
 
 interface TransactionsTableProps {
   transactions?: DomainTransaction[]
