@@ -1,18 +1,22 @@
+import type { AnalyticsTimeRange } from '../types/analytics'
+import { Badge } from './ui/Badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card'
 import { useKeywordTrends } from '../hooks/useDomaData'
 import { formatCurrency } from '../lib/utils'
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
-import { cn } from '../lib/utils'
+import { TrendPill } from './dashboard/TrendPill'
 
-export function KeywordTrends() {
-  const { data: keywords, isLoading } = useKeywordTrends()
+interface KeywordTrendsProps {
+  timeRange: AnalyticsTimeRange
+}
+
+export function KeywordTrends({ timeRange }: KeywordTrendsProps) {
+  const { data: keywords, isLoading } = useKeywordTrends(timeRange)
 
   if (isLoading || !keywords) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Keyword Trends</CardTitle>
-          <CardDescription>Popular keywords in domain names</CardDescription>
+          <CardTitle>Trending Keywords</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -25,61 +29,33 @@ export function KeywordTrends() {
     )
   }
 
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case 'up':
-        return <TrendingUp className="h-4 w-4 text-green-600" />
-      case 'down':
-        return <TrendingDown className="h-4 w-4 text-red-600" />
-      default:
-        return <Minus className="h-4 w-4 text-muted-foreground" />
-    }
-  }
-
-  const getTrendColor = (trend: string) => {
-    switch (trend) {
-      case 'up':
-        return 'text-green-600'
-      case 'down':
-        return 'text-red-600'
-      default:
-        return 'text-muted-foreground'
-    }
-  }
-
   return (
-    <Card>
+    <Card className="h-full overflow-hidden">
       <CardHeader>
-        <CardTitle>Keyword Trends</CardTitle>
-        <CardDescription>Top motifs in sales over the last 7 days</CardDescription>
+        <CardTitle>Trending Keywords</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {keywords.map((keyword) => (
-            <div
-              key={keyword.keyword}
-              className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-                  {getTrendIcon(keyword.trend)}
-                </div>
-                <div>
-                  <p className="font-semibold capitalize">{keyword.keyword}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {keyword.count} domains
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold">{formatCurrency(keyword.totalVolume)}</p>
-                <p className={cn('text-sm', getTrendColor(keyword.trend))}>
-                  {keyword.changePercent > 0 && '+'}
-                  {keyword.changePercent.toFixed(1)}%
-                </p>
-              </div>
-            </div>
-          ))}
+      <CardContent className="p-0">
+        <div className="relative overflow-x-auto">
+          <table className="w-full border-t text-sm">
+            <thead className="bg-muted/60 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
+              <tr>
+                <th scope="col" className="px-6 py-3 font-medium">Keyword</th>
+                <th scope="col" className="px-6 py-3 font-medium text-right">Volume (7d)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/60">
+              {keywords.map((keyword) => (
+                <tr key={keyword.keyword} className="hover:bg-muted/30 transition-colors">
+                  <td className="px-6 py-4">
+                    <span className="text-foreground font-medium uppercase">{keyword.keyword}</span>
+                  </td>
+                  <td className="px-6 py-4 font-semibold text-foreground text-right whitespace-nowrap">
+                    {formatCurrency(keyword.totalVolume)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </CardContent>
     </Card>

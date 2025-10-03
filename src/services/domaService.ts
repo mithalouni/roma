@@ -572,9 +572,9 @@ export const getMarketActivity = async (analyticsRange: AnalyticsTimeRange = '30
     const previousWindowStart = now - rangeDurationMs * 2
 
     const recentTransactionsRaw = purchases.filter((purchase: any) => new Date(purchase.createdAt).getTime() >= currentWindowStart)
-    const transactionSource = recentTransactionsRaw.length > 0 ? recentTransactionsRaw : purchases.slice(0, 25)
+    const transactionSource = recentTransactionsRaw.length > 0 ? recentTransactionsRaw : purchases.slice(0, 50)
 
-    const recentTransactions: DomainTransaction[] = transactionSource.slice(0, 25).map((tx: any) => ({
+    const recentTransactions: DomainTransaction[] = transactionSource.slice(0, 50).map((tx: any) => ({
       id: tx.id,
       domainName: tx.name,
       priceUsd: parseUsdFromPayment(tx.payment),

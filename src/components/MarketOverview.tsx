@@ -1,61 +1,43 @@
-import { Activity, Layers, DollarSign, Users } from 'lucide-react'
-import { StatCard } from './StatCard'
+import { Activity, DollarSign, Layers, Users } from 'lucide-react'
+import type { AnalyticsTimeRange } from '../types/analytics'
 import { useMarketStats } from '../hooks/useDomaData'
-import { formatNumber, formatCurrency } from '../lib/utils'
+import { formatCurrency, formatNumber } from '../lib/utils'
+import { StatCard } from './StatCard'
 
-export function MarketOverview() {
-  const { data: stats, isLoading } = useMarketStats()
+interface MarketOverviewProps {
+  timeRange: AnalyticsTimeRange
+}
 
-  if (isLoading || !stats) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="h-32 rounded-lg bg-muted animate-pulse" />
-        ))}
-      </div>
-    )
-  }
+export function MarketOverview({ timeRange }: MarketOverviewProps) {
+  const { data: stats, isLoading } = useMarketStats(timeRange)
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <StatCard
         title="24h Revenue"
-        value={formatCurrency(stats.revenue24h)}
-        change={stats.revenueChange24h}
-        changeLabel="vs previous 24h"
+        value={stats ? formatCurrency(stats.revenue24h) : '—'}
+        change={stats?.revenueChange24h}
         icon={DollarSign}
+        isLoading={isLoading}
       />
       <StatCard
         title="24h Transactions"
-        value={formatNumber(stats.transactions24h)}
-        change={stats.transactionsChange24h}
-        changeLabel="vs previous 24h"
+        value={stats ? formatNumber(stats.transactions24h) : '—'}
+        change={stats?.transactionsChange24h}
         icon={Activity}
-      />
-      <StatCard
-        title="24h Active Wallets"
-        value={formatNumber(stats.activeWallets24h)}
-        change={stats.walletChange24h}
-        changeLabel="vs previous 24h"
-        icon={Users}
+        isLoading={isLoading}
       />
       <StatCard
         title="Total Volume"
-        value={formatCurrency(stats.totalVolume)}
+        value={stats ? formatCurrency(stats.totalVolume) : '—'}
         icon={DollarSign}
-        description="All-time traded volume"
-      />
-      <StatCard
-        title="Total Transactions"
-        value={formatNumber(stats.totalTransactions)}
-        icon={Activity}
-        description="All-time marketplace transactions"
+        isLoading={isLoading}
       />
       <StatCard
         title="Active Domains"
-        value={formatNumber(stats.activeDomains)}
+        value={stats ? formatNumber(stats.activeDomains) : '—'}
         icon={Layers}
-        description="Tokenized on Doma"
+        isLoading={isLoading}
       />
     </div>
   )

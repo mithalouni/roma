@@ -17,7 +17,7 @@ export function WalletConnect() {
       <div className="relative">
         <button
           onClick={() => setShowDropdown(!showDropdown)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-[#0540AD] hover:bg-white/90 transition-colors"
         >
           <Wallet className="w-4 h-4" />
           <span className="text-sm font-medium">{formatAddress(address)}</span>
@@ -46,7 +46,7 @@ export function WalletConnect() {
     <div className="relative">
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-[#0540AD] hover:bg-white/90 transition-colors"
       >
         <Wallet className="w-4 h-4" />
         <span className="text-sm font-medium">Connect Wallet</span>

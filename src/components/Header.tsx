@@ -1,41 +1,60 @@
-import { BarChart3, Github, TrendingUp, Home, LineChart, Trophy, Wallet } from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
+import { BarChart3, Search, TrendingUp, LineChart, Trophy } from 'lucide-react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import type { FormEvent } from 'react'
+import { useState } from 'react'
 import { WalletConnect } from './WalletConnect'
 
 export function Header() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const [searchValue, setSearchValue] = useState('')
+
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const trimmed = searchValue.trim()
+    if (trimmed) {
+      navigate(`/domain/${encodeURIComponent(trimmed.toLowerCase())}`)
+      setSearchValue('')
+    }
+  }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary">
-              <BarChart3 className="h-6 w-6 text-primary-foreground" />
+    <header className="sticky top-0 z-50 w-full border-b bg-[#0540AD]">
+      <div className="container w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 mx-auto">
+        {/* First Row: Logo, Search, Wallet */}
+        <div className="flex h-16 items-center justify-between gap-4">
+          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-white">
+              <BarChart3 className="h-5 w-5 text-[#0540AD]" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold">Blockchain Domain Explorer</h1>
-              <p className="text-xs text-muted-foreground">Deep analytics powered by Doma Protocol</p>
-            </div>
+            <span className="text-lg font-bold text-white">Doma Analytics</span>
           </Link>
-          <nav className="flex items-center gap-1">
-            <Link
-              to="/"
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === '/'
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-            >
-              <Home className="h-4 w-4" />
-              Dashboard
-            </Link>
+
+          <form onSubmit={handleSearch} className="flex-1 max-w-md mx-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search domains..."
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                className="w-full h-9 pl-9 pr-4 text-sm rounded-lg border bg-white focus:outline-none focus:ring-2 focus:ring-white/40"
+              />
+            </div>
+          </form>
+
+          <WalletConnect />
+        </div>
+
+        {/* Second Row: Navigation */}
+        <div>
+          <nav className="flex items-center gap-1 h-12">
             <Link
               to="/trending"
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors ${
                 location.pathname === '/trending'
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  ? 'text-white'
+                  : 'text-white/70 hover:text-white'
               }`}
             >
               <TrendingUp className="h-4 w-4" />
@@ -43,10 +62,10 @@ export function Header() {
             </Link>
             <Link
               to="/analytics"
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors ${
                 location.pathname === '/analytics'
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  ? 'text-white'
+                  : 'text-white/70 hover:text-white'
               }`}
             >
               <LineChart className="h-4 w-4" />
@@ -54,46 +73,16 @@ export function Header() {
             </Link>
             <Link
               to="/performers"
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors ${
                 location.pathname === '/performers'
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  ? 'text-white'
+                  : 'text-white/70 hover:text-white'
               }`}
             >
               <Trophy className="h-4 w-4" />
               Top Performers
             </Link>
-            <Link
-              to="/portfolio"
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === '/portfolio'
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-            >
-              <Wallet className="h-4 w-4" />
-              Portfolio
-            </Link>
           </nav>
-        </div>
-        <div className="flex items-center gap-4">
-          <WalletConnect />
-          <a
-            href="https://docs.doma.xyz"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Docs
-          </a>
-          <a
-            href="https://github.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Github className="h-5 w-5" />
-          </a>
         </div>
       </div>
     </header>

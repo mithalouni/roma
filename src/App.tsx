@@ -10,7 +10,7 @@ import { PortfolioTracker } from './pages/PortfolioTracker'
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-white">
         <Header />
         <Routes>
           <Route path="/" element={<Home />} />
