@@ -1,62 +1,104 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-  getMarketStats,
-  getTrendingDomains,
-  getMockKeywordTrends,
-  getRecentTransactions,
-  getMockVolumeData,
-} from '../services/domaService'
+import { getDashboardData, getMarketActivity, searchDomain, getDomainTransactionHistory } from '../services/domaService'
 
-// Hook for market statistics - NOW USING REAL DATA
-export const useMarketStats = () => {
+export const useDashboardStats = () => {
   return useQuery({
-    queryKey: ['marketStats'],
-    queryFn: getMarketStats,
-    refetchInterval: 30000, // Refetch every 30 seconds
-    staleTime: 10000, // Consider data fresh for 10 seconds
-  })
-}
-
-// Hook for trending domains - NOW USING REAL DATA
-export const useTrendingDomains = () => {
-  return useQuery({
-    queryKey: ['trendingDomains'],
-    queryFn: getTrendingDomains,
-    refetchInterval: 60000, // Refetch every minute
+    queryKey: ['dashboard'],
+    queryFn: getDashboardData,
+    refetchInterval: 60000,
     staleTime: 30000,
   })
 }
 
-// Hook for keyword trends - STILL USING MOCK (needs custom logic)
+export const useMarketStats = () => {
+  return useQuery({
+    queryKey: ['dashboard'],
+    queryFn: getDashboardData,
+    select: (data) => data.stats,
+    refetchInterval: 60000,
+    staleTime: 30000,
+  })
+}
+
+export const useVolumeSeries = () => {
+  return useQuery({
+    queryKey: ['dashboard'],
+    queryFn: getDashboardData,
+    select: (data) => data.series,
+    refetchInterval: 60000,
+    staleTime: 30000,
+  })
+}
+
+export const useMarketActivity = () => {
+  return useQuery({
+    queryKey: ['marketActivity'],
+    queryFn: getMarketActivity,
+    refetchInterval: 45000,
+    staleTime: 20000,
+  })
+}
+
+export const useTrendingDomains = () => {
+  return useQuery({
+    queryKey: ['marketActivity'],
+    queryFn: getMarketActivity,
+    select: (data) => data.trendingDomains,
+    refetchInterval: 45000,
+    staleTime: 20000,
+  })
+}
+
 export const useKeywordTrends = () => {
   return useQuery({
-    queryKey: ['keywordTrends'],
-    queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 500))
-      return getMockKeywordTrends()
-    },
+    queryKey: ['marketActivity'],
+    queryFn: getMarketActivity,
+    select: (data) => data.keywordTrends,
     refetchInterval: 60000,
+    staleTime: 20000,
   })
 }
 
-// Hook for recent transactions - NOW USING REAL DATA
 export const useRecentTransactions = () => {
   return useQuery({
-    queryKey: ['recentTransactions'],
-    queryFn: getRecentTransactions,
-    refetchInterval: 15000, // Refetch every 15 seconds
-    staleTime: 5000,
+    queryKey: ['marketActivity'],
+    queryFn: getMarketActivity,
+    select: (data) => data.recentTransactions,
+    refetchInterval: 30000,
+    staleTime: 15000,
   })
 }
 
-// Hook for volume chart data
-export const useVolumeData = () => {
+export const useTopAccounts = () => {
   return useQuery({
-    queryKey: ['volumeData'],
-    queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 500))
-      return getMockVolumeData()
-    },
-    staleTime: 300000, // Data is fresh for 5 minutes
+    queryKey: ['marketActivity'],
+    queryFn: getMarketActivity,
+    select: (data) => ({ buyers: data.topBuyers, sellers: data.topSellers }),
+    refetchInterval: 60000,
+    staleTime: 30000,
+  })
+}
+
+export const useDomainSearch = (domainName: string, enabled: boolean) => {
+  const normalized = domainName.trim().toLowerCase()
+
+  return useQuery({
+    queryKey: ['domainSearch', normalized],
+    queryFn: () => searchDomain(normalized),
+    enabled: enabled && normalized.length > 0,
+    retry: false,
+    staleTime: 30000,
+  })
+}
+
+export const useDomainTransactionHistory = (domainName: string, enabled: boolean) => {
+  const normalized = domainName.trim().toLowerCase()
+
+  return useQuery({
+    queryKey: ['domainTransactionHistory', normalized],
+    queryFn: () => getDomainTransactionHistory(normalized),
+    enabled: enabled && normalized.length > 0,
+    retry: false,
+    staleTime: 30000,
   })
 }

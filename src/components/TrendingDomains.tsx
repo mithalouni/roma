@@ -29,7 +29,7 @@ export function TrendingDomains() {
     <Card>
       <CardHeader>
         <CardTitle>Trending Domains</CardTitle>
-        <CardDescription>Top domains by transaction volume in the last 24 hours</CardDescription>
+        <CardDescription>Leading sales from the past 7 days</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -45,7 +45,7 @@ export function TrendingDomains() {
                 <div>
                   <p className="font-semibold">{domain.domainName}</p>
                   <p className="text-sm text-muted-foreground">
-                    {domain.transactionCount} transactions
+                    {domain.transactionCount} {domain.transactionCount === 1 ? 'sale' : 'sales'} · Avg {formatCurrency(domain.averagePrice)}
                   </p>
                 </div>
               </div>

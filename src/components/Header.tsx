@@ -9,8 +9,8 @@ export function Header() {
             <BarChart3 className="h-6 w-6 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-xl font-bold">Doma Analytics</h1>
-            <p className="text-xs text-muted-foreground">DomainFi Market Intelligence</p>
+            <h1 className="text-xl font-bold">Blockchain Domain Explorer</h1>
+            <p className="text-xs text-muted-foreground">Deep analytics powered by Doma Protocol</p>
           </div>
         </div>
         <div className="flex items-center gap-4">

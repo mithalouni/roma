@@ -1,6 +1,6 @@
 // Doma API Configuration
-const DOMA_API_URL = import.meta.env.VITE_DOMA_API_URL || 'https://api-testnet.doma.xyz'
 const SUBGRAPH_URL = import.meta.env.VITE_DOMA_SUBGRAPH_URL || 'https://api-testnet.doma.xyz/graphql'
+const DOMA_API_KEY = import.meta.env.VITE_DOMA_API_KEY
 
 // GraphQL query helper
 const querySubgraph = async (query: string, variables?: Record<string, any>) => {
@@ -9,26 +9,24 @@ const querySubgraph = async (query: string, variables?: Record<string, any>) => 
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(DOMA_API_KEY ? { 'Api-Key': DOMA_API_KEY } : {}),
       },
       body: JSON.stringify({ query, variables }),
     })
-    
+
     if (!response.ok) {
       const errorText = await response.text()
       console.error('Subgraph HTTP error:', response.status, errorText)
       throw new Error(`Subgraph query failed: ${response.statusText}`)
     }
-    
+
     const data = await response.json()
-    
-    // Log the full response for debugging
-    console.log('Subgraph response:', data)
-    
+
     if (data.errors) {
       console.error('GraphQL errors:', data.errors)
       throw new Error(`GraphQL errors: ${JSON.stringify(data.errors)}`)
     }
-    
+
     return data.data
   } catch (error) {
     console.error('Subgraph query error:', error)
@@ -36,31 +34,19 @@ const querySubgraph = async (query: string, variables?: Record<string, any>) => 
   }
 }
 
-// Types for our analytics data
-export interface DomainListing {
-  id: string
-  domainName: string
-  price: string
-  seller: string
-  timestamp: number
-  status: 'active' | 'sold' | 'cancelled'
-}
-
-export interface DomainOffer {
-  id: string
-  domainName: string
-  price: string
-  buyer: string
-  timestamp: number
-  status: 'pending' | 'accepted' | 'rejected'
-}
+// ===== Types =====
 
 export interface MarketStats {
   totalVolume: number
   totalTransactions: number
   activeDomains: number
   averagePrice: number
-  volumeChange24h: number
+  revenue24h: number
+  revenueChange24h: number
+  transactions24h: number
+  transactionsChange24h: number
+  activeWallets24h: number
+  walletChange24h: number
 }
 
 export interface TrendingDomain {
@@ -79,271 +65,858 @@ export interface KeywordTrend {
   changePercent: number
 }
 
-// Mock data for development - will be replaced with real API calls
-export const getMockMarketStats = (): MarketStats => ({
-  totalVolume: 1250000,
-  totalTransactions: 3456,
-  activeDomains: 12890,
-  averagePrice: 361.63,
-  volumeChange24h: 12.5,
-})
-
-export const getMockTrendingDomains = (): TrendingDomain[] => [
-  {
-    domainName: 'crypto.eth',
-    transactionCount: 45,
-    totalVolume: 125000,
-    averagePrice: 2777.78,
-    priceChange24h: 15.2,
-  },
-  {
-    domainName: 'defi.eth',
-    transactionCount: 38,
-    totalVolume: 98000,
-    averagePrice: 2578.95,
-    priceChange24h: -5.3,
-  },
-  {
-    domainName: 'nft.eth',
-    transactionCount: 32,
-    totalVolume: 87000,
-    averagePrice: 2718.75,
-    priceChange24h: 8.7,
-  },
-  {
-    domainName: 'web3.eth',
-    transactionCount: 28,
-    totalVolume: 76000,
-    averagePrice: 2714.29,
-    priceChange24h: 22.1,
-  },
-  {
-    domainName: 'dao.eth',
-    transactionCount: 25,
-    totalVolume: 65000,
-    averagePrice: 2600.00,
-    priceChange24h: -2.8,
-  },
-]
-
-export const getMockKeywordTrends = (): KeywordTrend[] => [
-  {
-    keyword: 'crypto',
-    count: 234,
-    totalVolume: 456000,
-    trend: 'up',
-    changePercent: 18.5,
-  },
-  {
-    keyword: 'defi',
-    count: 189,
-    totalVolume: 378000,
-    trend: 'up',
-    changePercent: 12.3,
-  },
-  {
-    keyword: 'nft',
-    count: 156,
-    totalVolume: 298000,
-    trend: 'down',
-    changePercent: -5.2,
-  },
-  {
-    keyword: 'web3',
-    count: 145,
-    totalVolume: 287000,
-    trend: 'up',
-    changePercent: 25.7,
-  },
-  {
-    keyword: 'dao',
-    count: 123,
-    totalVolume: 245000,
-    trend: 'stable',
-    changePercent: 1.2,
-  },
-]
-
-export const getMockRecentTransactions = (): DomainListing[] => [
-  {
-    id: '1',
-    domainName: 'crypto.eth',
-    price: '2500',
-    seller: '0x1234...5678',
-    timestamp: Date.now() / 1000 - 3600,
-    status: 'sold',
-  },
-  {
-    id: '2',
-    domainName: 'defi.eth',
-    price: '1800',
-    seller: '0x2345...6789',
-    timestamp: Date.now() / 1000 - 7200,
-    status: 'sold',
-  },
-  {
-    id: '3',
-    domainName: 'nft.eth',
-    price: '3200',
-    seller: '0x3456...7890',
-    timestamp: Date.now() / 1000 - 10800,
-    status: 'active',
-  },
-  {
-    id: '4',
-    domainName: 'web3.eth',
-    price: '2100',
-    seller: '0x4567...8901',
-    timestamp: Date.now() / 1000 - 14400,
-    status: 'sold',
-  },
-  {
-    id: '5',
-    domainName: 'dao.eth',
-    price: '1500',
-    seller: '0x5678...9012',
-    timestamp: Date.now() / 1000 - 18000,
-    status: 'active',
-  },
-]
-
-// Chart data for volume over time
-export const getMockVolumeData = () => {
-  const days = 30
-  const data = []
-  for (let i = days; i >= 0; i--) {
-    const date = new Date()
-    date.setDate(date.getDate() - i)
-    data.push({
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      volume: Math.floor(Math.random() * 50000) + 20000,
-      transactions: Math.floor(Math.random() * 150) + 50,
-    })
-  }
-  return data
+export interface DomainTransaction {
+  id: string
+  domainName: string
+  priceUsd: number
+  currencySymbol: string
+  buyer: string
+  seller: string
+  timestamp: number
 }
 
-// ============ REAL DATA FUNCTIONS ============
+export interface TopAccount {
+  address: string
+  tradeCount: number
+  totalVolume: number
+}
 
-// Fetch real listings from GraphQL
-export const getRealListings = async () => {
+export interface VolumeTimeSeriesPoint {
+  isoDate: string
+  dateLabel: string
+  revenueUsd: number
+  transactionCount: number
+  walletCount: number
+}
+
+export interface DashboardData {
+  stats: MarketStats
+  series: VolumeTimeSeriesPoint[]
+}
+
+export interface MarketActivityData {
+  recentTransactions: DomainTransaction[]
+  trendingDomains: TrendingDomain[]
+  keywordTrends: KeywordTrend[]
+  topBuyers: TopAccount[]
+  topSellers: TopAccount[]
+}
+
+export interface ListingSummary {
+  id: string
+  seller: string
+  priceUsd: number
+  priceNative: number
+  currencySymbol: string
+  orderbook: string
+  createdAt: string
+  expiresAt: string
+}
+
+export interface TokenSummary {
+  tokenId: string
+  owner: string
+  type: string
+  chainId: string
+  createdAt: string
+  listings: ListingSummary[]
+}
+
+export interface HighestOfferSummary {
+  priceUsd: number
+  priceNative: number
+  currencySymbol: string
+  offerer: string
+  createdAt: string
+  expiresAt: string
+}
+
+export interface DomainSearchResult {
+  domainName: string
+  expiresAt: string
+  tokenizedAt: string
+  claimedBy: string
+  registrarName: string
+  activeOffersCount: number
+  isFractionalized: boolean
+  highestOffer: HighestOfferSummary | null
+  tokens: TokenSummary[]
+}
+
+// ===== Helpers =====
+
+const normalizeAddress = (address?: string | null) => {
+  if (!address) return '0x0000...0000'
+  const parts = address.split(':')
+  const maybeAddress = parts[parts.length - 1]
+  return maybeAddress.startsWith('0x') ? maybeAddress : address
+}
+
+const toBigInt = (value: string | number) => {
+  if (typeof value === 'string') {
+    return BigInt(value)
+  }
+  if (typeof value === 'number') {
+    return BigInt(Math.trunc(value))
+  }
+  return 0n
+}
+
+const parseCurrencyAmount = (
+  price: string | number | null | undefined,
+  currency?: { decimals?: number | null; usdExchangeRate?: number | null }
+) => {
+  if (price === null || price === undefined) {
+    return { native: 0, usd: 0 }
+  }
+
+  const decimals = currency?.decimals ?? 18
+  const rate = Number(currency?.usdExchangeRate ?? 0)
+
   try {
-    const query = `
-      query GetListings {
-        listings(sortBy: CREATED_AT, sortOrder: DESC) {
-          items {
-            id
-            name {
-              name
-            }
-            price
-            seller
-            createdAt
-            status
-          }
-          totalCount
-        }
-      }
-    `
-    
-    const result = await querySubgraph(query)
-    
-    if (result?.listings?.items && result.listings.items.length > 0) {
-      const listings: DomainListing[] = result.listings.items.slice(0, 5).map((listing: any) => ({
-        id: listing.id,
-        domainName: listing.name?.name || 'Unknown Domain',
-        price: listing.price || '0',
-        seller: listing.seller || '0x0',
-        timestamp: Math.floor(new Date(listing.createdAt).getTime() / 1000),
-        status: listing.status === 'ACTIVE' ? 'active' : 'sold',
-      }))
-      
-      console.log('Real listings fetched:', listings)
-      return listings
+    const bigIntValue = toBigInt(price)
+    const native = Number(bigIntValue) / Math.pow(10, decimals)
+    const usd = rate ? native * rate : native
+    return {
+      native: Number.isFinite(native) ? native : 0,
+      usd: Number.isFinite(usd) ? usd : 0,
     }
-    
-    return getMockRecentTransactions()
   } catch (error) {
-    console.error('Error fetching real listings:', error)
-    return getMockRecentTransactions()
+    console.warn('Failed to parse currency amount', error)
+    return { native: 0, usd: 0 }
   }
 }
 
-// Fetch market stats from Subgraph
-export const getRealMarketStats = async (): Promise<MarketStats> => {
+const parseUsdFromPayment = (payment: any) => {
+  if (!payment) return 0
+  if (typeof payment.usdValue === 'number') return payment.usdValue
+
+  try {
+    const price = payment.price as string | number | undefined
+    if (price === undefined) return 0
+
+    const symbol = (payment.currencySymbol as string | undefined)?.toUpperCase()
+    const decimals = symbol === 'USDC' || symbol === 'USDT' ? 6 : 18
+    const { native, usd } = parseCurrencyAmount(price, {
+      decimals,
+      usdExchangeRate: payment.usdExchangeRate ?? undefined,
+    })
+    return usd || native
+  } catch (error) {
+    console.warn('Failed to parse payment info', error)
+    return 0
+  }
+}
+
+const formatDateLabel = (isoDate: string) => {
+  return new Date(isoDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+const calculatePercentChange = (current: number, previous: number) => {
+  if (previous === 0) {
+    return current === 0 ? 0 : 100
+  }
+  return ((current - previous) / previous) * 100
+}
+
+const extractKeywords = (domainName: string) => {
+  const lower = domainName.toLowerCase()
+  const withoutTld = lower.includes('.') ? lower.split('.')[0] : lower
+  const rawTokens = withoutTld.split(/[-_\s]+/)
+  return rawTokens
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 3 && /^[a-z0-9]+$/.test(token))
+}
+
+const getMockDashboardData = (): DashboardData => {
+  const now = Date.now()
+  const series: VolumeTimeSeriesPoint[] = Array.from({ length: 12 }).map((_, idx) => {
+    const date = new Date(now - (11 - idx) * 24 * 60 * 60 * 1000)
+    const revenue = 200000 + Math.random() * 50000
+    const transactions = 500 + Math.random() * 150
+    const wallets = 200 + Math.random() * 80
+
+    return {
+      isoDate: date.toISOString(),
+      dateLabel: formatDateLabel(date.toISOString()),
+      revenueUsd: revenue,
+      transactionCount: Math.round(transactions),
+      walletCount: Math.round(wallets),
+    }
+  })
+
+  const latest = series[series.length - 1]
+  const previous = series[series.length - 2]
+
+  return {
+    stats: {
+      totalVolume: 1250000,
+      totalTransactions: 34560,
+      activeDomains: 12890,
+      averagePrice: 361.63,
+      revenue24h: latest.revenueUsd,
+      revenueChange24h: calculatePercentChange(latest.revenueUsd, previous.revenueUsd),
+      transactions24h: latest.transactionCount,
+      transactionsChange24h: calculatePercentChange(latest.transactionCount, previous.transactionCount),
+      activeWallets24h: latest.walletCount,
+      walletChange24h: calculatePercentChange(latest.walletCount, previous.walletCount),
+    },
+    series,
+  }
+}
+
+const getMockMarketActivity = (): MarketActivityData => {
+  const now = Math.floor(Date.now() / 1000)
+  const mockTransactions: DomainTransaction[] = Array.from({ length: 5 }).map((_, idx) => ({
+    id: `${idx + 1}`,
+    domainName: `example${idx + 1}.eth`,
+    priceUsd: 1500 + idx * 320,
+    currencySymbol: 'ETH',
+    buyer: '0x1234...abcd',
+    seller: '0xabcd...1234',
+    timestamp: now - idx * 3600,
+  }))
+
+  return {
+    recentTransactions: mockTransactions,
+    trendingDomains: [
+      {
+        domainName: 'crypto.eth',
+        transactionCount: 12,
+        totalVolume: 86500,
+        averagePrice: 7208.33,
+        priceChange24h: 18.4,
+      },
+      {
+        domainName: 'defi.eth',
+        transactionCount: 9,
+        totalVolume: 62340,
+        averagePrice: 6926.67,
+        priceChange24h: -6.2,
+      },
+    ],
+    keywordTrends: [
+      {
+        keyword: 'ai',
+        count: 42,
+        totalVolume: 186000,
+        trend: 'up',
+        changePercent: 32.4,
+      },
+      {
+        keyword: 'defi',
+        count: 28,
+        totalVolume: 142500,
+        trend: 'stable',
+        changePercent: 3.5,
+      },
+    ],
+    topBuyers: [
+      { address: '0x1234...abcd', tradeCount: 14, totalVolume: 256000 },
+      { address: '0xabcd...1234', tradeCount: 9, totalVolume: 182000 },
+    ],
+    topSellers: [
+      { address: '0x9876...fedc', tradeCount: 11, totalVolume: 221000 },
+      { address: '0xfeed...cafe', tradeCount: 8, totalVolume: 144500 },
+    ],
+  }
+}
+
+// ===== Real data functions =====
+
+export const getDashboardData = async (): Promise<DashboardData> => {
   try {
     const query = `
-      query GetMarketStats {
+      query GetDashboardData($timeRange: StatisticsTimeRange!) {
         statistics {
           totalDomains
+          totalValueLockedFractionalized
+        }
+        chainStatistics {
+          totalTransactions
+          totalRevenueUsd
+          totalActiveWallets
+        }
+        dailyRevenue(timeRange: $timeRange) {
+          date
+          revenueUsd
+        }
+        dailyTransactionCount(timeRange: $timeRange) {
+          date
+          transactionCount
+        }
+        dailyActiveWallets(timeRange: $timeRange) {
+          date
+          walletCount
         }
       }
     `
-    
-    const result = await querySubgraph(query)
-    
-    if (result?.statistics) {
-      const stats = result.statistics
-      const totalDomains = parseInt(stats.totalDomains || '0')
-      
-      console.log('Real market stats fetched:', { totalDomains })
-      
-      return {
-        totalVolume: 0, // Will calculate from listings
-        totalTransactions: 0,
-        activeDomains: totalDomains,
-        averagePrice: 0,
-        volumeChange24h: 0,
+
+    const data = await querySubgraph(query, { timeRange: 'LAST_30_DAYS' })
+
+    const statistics = data?.statistics
+    const chainStatistics = data?.chainStatistics
+    const dailyRevenue = data?.dailyRevenue ?? []
+    const dailyTransactions = data?.dailyTransactionCount ?? []
+    const dailyWallets = data?.dailyActiveWallets ?? []
+
+    const seriesMap = new Map<string, VolumeTimeSeriesPoint>()
+
+    const ensurePoint = (isoDate: string) => {
+      if (!seriesMap.has(isoDate)) {
+        seriesMap.set(isoDate, {
+          isoDate,
+          dateLabel: formatDateLabel(isoDate),
+          revenueUsd: 0,
+          transactionCount: 0,
+          walletCount: 0,
+        })
       }
+      return seriesMap.get(isoDate)!
     }
-    
-    return getMockMarketStats()
+
+    dailyRevenue.forEach((entry: any) => {
+      const point = ensurePoint(entry.date)
+      point.revenueUsd = Number(entry.revenueUsd ?? 0)
+    })
+
+    dailyTransactions.forEach((entry: any) => {
+      const point = ensurePoint(entry.date)
+      point.transactionCount = Number(entry.transactionCount ?? 0)
+    })
+
+    dailyWallets.forEach((entry: any) => {
+      const point = ensurePoint(entry.date)
+      point.walletCount = Number(entry.walletCount ?? 0)
+    })
+
+    const series = Array.from(seriesMap.values()).sort((a, b) => new Date(a.isoDate).getTime() - new Date(b.isoDate).getTime())
+
+    if (series.length === 0) {
+      return getMockDashboardData()
+    }
+
+    const latest = series[series.length - 1]
+    const previous = series.length > 1 ? series[series.length - 2] : { revenueUsd: 0, transactionCount: 0, walletCount: 0 }
+
+    const totalVolume = Number(chainStatistics?.totalRevenueUsd ?? statistics?.totalValueLockedFractionalized ?? 0)
+    const totalTransactions = Number(chainStatistics?.totalTransactions ?? 0)
+    const activeDomains = Number(statistics?.totalDomains ?? 0)
+    const averagePrice = totalTransactions > 0 ? totalVolume / totalTransactions : 0
+
+    return {
+      stats: {
+        totalVolume,
+        totalTransactions,
+        activeDomains,
+        averagePrice,
+        revenue24h: latest.revenueUsd,
+        revenueChange24h: calculatePercentChange(latest.revenueUsd, previous.revenueUsd ?? 0),
+        transactions24h: latest.transactionCount,
+        transactionsChange24h: calculatePercentChange(latest.transactionCount, previous.transactionCount ?? 0),
+        activeWallets24h: latest.walletCount,
+        walletChange24h: calculatePercentChange(latest.walletCount, previous.walletCount ?? 0),
+      },
+      series,
+    }
   } catch (error) {
-    console.error('Error fetching market stats:', error)
-    return getMockMarketStats()
+    console.error('Error fetching dashboard data:', error)
+    return getMockDashboardData()
   }
 }
 
-// Fetch trending domains from listings (names query requires API key)
-export const getRealTrendingDomains = async (): Promise<TrendingDomain[]> => {
+export const getMarketActivity = async (): Promise<MarketActivityData> => {
   try {
+    const now = Date.now()
+    const fourteenDaysAgo = new Date(now - 14 * 24 * 60 * 60 * 1000).toISOString()
+
     const query = `
-      query GetTrendingDomains {
-        listings(sortBy: CREATED_AT, sortOrder: DESC) {
+      query GetMarketActivity($fromDate: DateTime!, $take: Int!) {
+        tokenActivities(
+          fromDate: $fromDate
+          take: $take
+          sortBy: CREATED_AT
+          sortOrder: DESC
+          types: [LISTED, PURCHASED]
+        ) {
           items {
-            name {
+            __typename
+            ... on TokenListedActivity {
+              id
               name
+              createdAt
+              seller
+              payment {
+                price
+                currencySymbol
+                usdValue
+              }
             }
-            price
+            ... on TokenPurchasedActivity {
+              id
+              name
+              createdAt
+              buyer
+              seller
+              payment {
+                price
+                currencySymbol
+                usdValue
+              }
+            }
           }
-          totalCount
         }
       }
     `
-    
-    const result = await querySubgraph(query)
-    
-    if (result?.listings?.items && result.listings.items.length > 0) {
-      const domains: TrendingDomain[] = result.listings.items.slice(0, 5).map((listing: any) => ({
-        domainName: listing.name?.name || 'Unknown',
-        transactionCount: 1,
-        totalVolume: parseFloat(listing.price || '0'),
-        averagePrice: parseFloat(listing.price || '0'),
-        priceChange24h: 0,
-      }))
-      
-      console.log('Real trending domains fetched:', domains)
-      return domains.length > 0 ? domains : getMockTrendingDomains()
+
+    const data = await querySubgraph(query, { fromDate: fourteenDaysAgo, take: 100 })
+    const activities = data?.tokenActivities?.items ?? []
+
+    if (activities.length === 0) {
+      return getMockMarketActivity()
     }
-    
-    return getMockTrendingDomains()
+
+    const purchases = activities.filter((item: any) => item.__typename === 'TokenPurchasedActivity')
+
+    const currentWindowStart = now - 7 * 24 * 60 * 60 * 1000
+    const previousWindowStart = now - 14 * 24 * 60 * 60 * 1000
+
+    const recentTransactions: DomainTransaction[] = purchases.slice(0, 15).map((tx: any) => ({
+      id: tx.id,
+      domainName: tx.name,
+      priceUsd: parseUsdFromPayment(tx.payment),
+      currencySymbol: tx.payment?.currencySymbol ?? 'USD',
+      buyer: normalizeAddress(tx.buyer),
+      seller: normalizeAddress(tx.seller),
+      timestamp: Math.floor(new Date(tx.createdAt).getTime() / 1000),
+    }))
+
+    const domainStats = new Map<string, {
+      currentVolume: number
+      currentCount: number
+      lastPrice?: number
+      previousPrice?: number
+    }>()
+
+    const keywordCurrent = new Map<string, { count: number; volume: number }>()
+    const keywordPrevious = new Map<string, { count: number; volume: number }>()
+
+    const buyerStats = new Map<string, { volume: number; count: number }>()
+    const sellerStats = new Map<string, { volume: number; count: number }>()
+
+    purchases.forEach((purchase: any) => {
+      const volumeUsd = parseUsdFromPayment(purchase.payment)
+      const timestampMs = new Date(purchase.createdAt).getTime()
+      const domainName = purchase.name ?? 'unknown'
+
+      const buyer = normalizeAddress(purchase.buyer)
+      const seller = normalizeAddress(purchase.seller)
+
+      const buyerEntry = buyerStats.get(buyer) ?? { volume: 0, count: 0 }
+      buyerEntry.volume += volumeUsd
+      buyerEntry.count += 1
+      buyerStats.set(buyer, buyerEntry)
+
+      const sellerEntry = sellerStats.get(seller) ?? { volume: 0, count: 0 }
+      sellerEntry.volume += volumeUsd
+      sellerEntry.count += 1
+      sellerStats.set(seller, sellerEntry)
+
+      const domainEntry = domainStats.get(domainName) ?? {
+        currentVolume: 0,
+        currentCount: 0,
+        lastPrice: undefined,
+        previousPrice: undefined,
+      }
+
+      if (timestampMs >= currentWindowStart) {
+        domainEntry.currentVolume += volumeUsd
+        domainEntry.currentCount += 1
+
+        if (domainEntry.lastPrice === undefined) {
+          domainEntry.lastPrice = volumeUsd
+        } else if (domainEntry.previousPrice === undefined) {
+          domainEntry.previousPrice = volumeUsd
+        }
+      }
+
+      domainStats.set(domainName, domainEntry)
+
+      const keywords = extractKeywords(domainName)
+      if (timestampMs >= currentWindowStart) {
+        keywords.forEach((keyword) => {
+          const entry = keywordCurrent.get(keyword) ?? { count: 0, volume: 0 }
+          entry.count += 1
+          entry.volume += volumeUsd
+          keywordCurrent.set(keyword, entry)
+        })
+      } else if (timestampMs >= previousWindowStart) {
+        keywords.forEach((keyword) => {
+          const entry = keywordPrevious.get(keyword) ?? { count: 0, volume: 0 }
+          entry.count += 1
+          entry.volume += volumeUsd
+          keywordPrevious.set(keyword, entry)
+        })
+      }
+    })
+
+    const trendingDomains: TrendingDomain[] = Array.from(domainStats.entries())
+      .filter(([, stats]) => stats.currentCount > 0)
+      .map(([domainName, stats]) => {
+        const averagePrice = stats.currentCount > 0 ? stats.currentVolume / stats.currentCount : 0
+        const priceChange = stats.previousPrice
+          ? calculatePercentChange(stats.lastPrice ?? 0, stats.previousPrice)
+          : 0
+
+        return {
+          domainName,
+          transactionCount: stats.currentCount,
+          totalVolume: stats.currentVolume,
+          averagePrice,
+          priceChange24h: priceChange,
+        }
+      })
+      .sort((a, b) => b.totalVolume - a.totalVolume)
+      .slice(0, 5)
+
+    const keywordTrends: KeywordTrend[] = Array.from(keywordCurrent.entries())
+      .map(([keyword, stats]) => {
+        const previous = keywordPrevious.get(keyword)
+        const changePercent = calculatePercentChange(stats.count, previous?.count ?? 0)
+        const trend: KeywordTrend['trend'] = changePercent > 5 ? 'up' : changePercent < -5 ? 'down' : 'stable'
+
+        return {
+          keyword,
+          count: stats.count,
+          totalVolume: stats.volume,
+          trend,
+          changePercent,
+        }
+      })
+      .sort((a, b) => b.count - a.count || b.totalVolume - a.totalVolume)
+      .slice(0, 5)
+
+    const topBuyers: TopAccount[] = Array.from(buyerStats.entries())
+      .map(([address, stats]) => ({
+        address,
+        tradeCount: stats.count,
+        totalVolume: stats.volume,
+      }))
+      .sort((a, b) => b.totalVolume - a.totalVolume)
+      .slice(0, 5)
+
+    const topSellers: TopAccount[] = Array.from(sellerStats.entries())
+      .map(([address, stats]) => ({
+        address,
+        tradeCount: stats.count,
+        totalVolume: stats.volume,
+      }))
+      .sort((a, b) => b.totalVolume - a.totalVolume)
+      .slice(0, 5)
+
+    const fallback = getMockMarketActivity()
+
+    return {
+      recentTransactions: recentTransactions.length > 0 ? recentTransactions : fallback.recentTransactions,
+      trendingDomains: trendingDomains.length > 0 ? trendingDomains : fallback.trendingDomains,
+      keywordTrends: keywordTrends.length > 0 ? keywordTrends : fallback.keywordTrends,
+      topBuyers: topBuyers.length > 0 ? topBuyers : fallback.topBuyers,
+      topSellers: topSellers.length > 0 ? topSellers : fallback.topSellers,
+    }
   } catch (error) {
-    console.error('Error fetching trending domains:', error)
-    return getMockTrendingDomains()
+    console.error('Error fetching market activity:', error)
+    return getMockMarketActivity()
   }
 }
 
-// Use real data or fallback to mock
-export const getMarketStats = getRealMarketStats
-export const getTrendingDomains = getRealTrendingDomains  
-export const getRecentTransactions = getRealListings
+const fetchDomainDetails = async (domain: string): Promise<DomainSearchResult | null> => {
+  const trimmed = domain.trim()
+  if (!trimmed) return null
+
+  const query = `
+    query SearchDomain($name: String!) {
+      name(name: $name) {
+        name
+        expiresAt
+        tokenizedAt
+        claimedBy
+        registrar {
+          name
+        }
+        activeOffersCount
+        isFractionalized
+        highestOffer {
+          price
+          offererAddress
+          createdAt
+          expiresAt
+          currency {
+            symbol
+            decimals
+            usdExchangeRate
+          }
+        }
+        tokens {
+          tokenId
+          ownerAddress
+          type
+          createdAt
+          chain {
+            networkId
+          }
+          listings {
+            id
+            price
+            offererAddress
+            orderbook
+            createdAt
+            expiresAt
+            currency {
+              symbol
+              decimals
+              usdExchangeRate
+            }
+          }
+        }
+      }
+    }
+  `
+
+  try {
+    const result = await querySubgraph(query, { name: trimmed })
+    const nameData = result?.name
+
+    if (!nameData) {
+      return null
+    }
+
+    const highestOfferData = nameData.highestOffer
+    const highestOffer: HighestOfferSummary | null = highestOfferData
+      ? (() => {
+          const amounts = parseCurrencyAmount(highestOfferData.price, highestOfferData.currency)
+          return {
+            priceUsd: amounts.usd,
+            priceNative: amounts.native,
+            currencySymbol: highestOfferData.currency?.symbol ?? 'N/A',
+            offerer: normalizeAddress(highestOfferData.offererAddress),
+            createdAt: highestOfferData.createdAt,
+            expiresAt: highestOfferData.expiresAt,
+          }
+        })()
+      : null
+
+    const tokens: TokenSummary[] = (nameData.tokens ?? []).map((token: any) => {
+      const listings: ListingSummary[] = (token.listings ?? []).map((listing: any) => {
+        const amounts = parseCurrencyAmount(listing.price, listing.currency)
+        return {
+          id: listing.id,
+          seller: normalizeAddress(listing.offererAddress),
+          priceUsd: amounts.usd,
+          priceNative: amounts.native,
+          currencySymbol: listing.currency?.symbol ?? 'N/A',
+          orderbook: listing.orderbook ?? 'UNKNOWN',
+          createdAt: listing.createdAt,
+          expiresAt: listing.expiresAt,
+        }
+      })
+
+      return {
+        tokenId: token.tokenId,
+        owner: normalizeAddress(token.ownerAddress),
+        type: token.type,
+        chainId: token.chain?.networkId ?? 'unknown',
+        createdAt: token.createdAt,
+        listings,
+      }
+    })
+
+    return {
+      domainName: nameData.name,
+      expiresAt: nameData.expiresAt,
+      tokenizedAt: nameData.tokenizedAt,
+      claimedBy: normalizeAddress(nameData.claimedBy),
+      registrarName: nameData.registrar?.name ?? 'Unknown Registrar',
+      activeOffersCount: Number(nameData.activeOffersCount ?? 0),
+      isFractionalized: Boolean(nameData.isFractionalized),
+      highestOffer,
+      tokens,
+    }
+  } catch (error) {
+    const message = (error as Error)?.message ?? ''
+    if (message.includes('Name not found') || message.includes('NOT_FOUND')) {
+      return null
+    }
+
+    console.error('Error searching domain:', error)
+    throw new Error('Failed to fetch domain details')
+  }
+}
+
+export const searchDomain = fetchDomainDetails
+
+export interface DomainTransactionHistory {
+  id: string
+  type: 'LISTED' | 'PURCHASED' | 'TRANSFERRED' | 'MINTED'
+  domainName: string
+  timestamp: number
+  priceUsd: number
+  priceNative: number
+  currencySymbol: string
+  buyer?: string
+  seller?: string
+  from?: string
+  to?: string
+  tokenId?: string
+}
+
+export const getDomainTransactionHistory = async (domainName: string): Promise<DomainTransactionHistory[]> => {
+  if (!domainName) return []
+
+  const normalizedDomain = domainName.trim().toLowerCase()
+
+  const query = `
+    query GetDomainTransactionHistory($name: String!) {
+      tokens(name: $name) {
+        items {
+          tokenId
+          activities {
+            __typename
+            ... on TokenMintedActivity {
+              id
+              name
+              createdAt
+              owner
+            }
+            ... on TokenTransferredActivity {
+              id
+              name
+              createdAt
+              transferredFrom
+              transferredTo
+            }
+            ... on TokenListedActivity {
+              id
+              name
+              createdAt
+              seller
+              payment {
+                price
+                currencySymbol
+                usdValue
+              }
+            }
+            ... on TokenPurchasedActivity {
+              id
+              name
+              createdAt
+              buyer
+              seller
+              payment {
+                price
+                currencySymbol
+                usdValue
+              }
+            }
+          }
+        }
+      }
+    }
+  `
+
+  try {
+    const data = await querySubgraph(query, { name: normalizedDomain })
+    const tokens = data?.tokens?.items ?? []
+
+    const history: DomainTransactionHistory[] = []
+
+    tokens.forEach((token: any) => {
+      const tokenId = token.tokenId as string | undefined
+      const activities: any[] = token.activities ?? []
+
+      activities.forEach((activity: any) => {
+        const createdAt = activity?.createdAt
+        const timestamp = createdAt ? Math.floor(new Date(createdAt).getTime() / 1000) : 0
+        if (!timestamp) {
+          return
+        }
+
+        const symbol = (activity?.payment?.currencySymbol ?? '').toUpperCase()
+        const decimals = symbol === 'USDC' || symbol === 'USDT' ? 6 : 18
+        const amounts = parseCurrencyAmount(activity?.payment?.price, {
+          decimals,
+          usdExchangeRate: 1,
+        })
+        const priceUsd = typeof activity?.payment?.usdValue === 'number' ? activity.payment.usdValue : amounts.usd
+        const currencySymbol = symbol || (priceUsd > 0 || amounts.native > 0 ? 'ETH' : '')
+
+        switch (activity.__typename) {
+          case 'TokenPurchasedActivity': {
+            history.push({
+              id: activity.id,
+              type: 'PURCHASED',
+              domainName: normalizedDomain,
+              timestamp,
+              priceUsd,
+              priceNative: amounts.native,
+              currencySymbol,
+              buyer: normalizeAddress(activity.buyer),
+              seller: normalizeAddress(activity.seller),
+              tokenId,
+            })
+            break
+          }
+          case 'TokenListedActivity': {
+            history.push({
+              id: activity.id,
+              type: 'LISTED',
+              domainName: normalizedDomain,
+              timestamp,
+              priceUsd,
+              priceNative: amounts.native,
+              currencySymbol,
+              seller: normalizeAddress(activity.seller),
+              tokenId,
+            })
+            break
+          }
+          case 'TokenTransferredActivity': {
+            history.push({
+              id: activity.id,
+              type: 'TRANSFERRED',
+              domainName: normalizedDomain,
+              timestamp,
+              priceUsd: 0,
+              priceNative: 0,
+              currencySymbol: '',
+              from: normalizeAddress(activity.transferredFrom),
+              to: normalizeAddress(activity.transferredTo),
+              tokenId,
+            })
+            break
+          }
+          case 'TokenMintedActivity': {
+            history.push({
+              id: activity.id,
+              type: 'MINTED',
+              domainName: normalizedDomain,
+              timestamp,
+              priceUsd: 0,
+              priceNative: 0,
+              currencySymbol: '',
+              to: normalizeAddress(activity.owner),
+              tokenId,
+            })
+            break
+          }
+          default:
+            break
+        }
+      })
+    })
+
+    return history.sort((a, b) => b.timestamp - a.timestamp)
+  } catch (error) {
+    console.error('Error fetching domain transaction history:', error)
+    return []
+  }
+}

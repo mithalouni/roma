@@ -1,9 +1,9 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card'
-import { useVolumeData } from '../hooks/useDomaData'
+import { useVolumeSeries } from '../hooks/useDomaData'
 
 export function VolumeChart() {
-  const { data: volumeData, isLoading } = useVolumeData()
+  const { data: volumeData, isLoading } = useVolumeSeries()
 
   if (isLoading || !volumeData) {
     return (
@@ -32,7 +32,7 @@ export function VolumeChart() {
           <LineChart data={volumeData}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis 
-              dataKey="date" 
+              dataKey="dateLabel" 
               className="text-xs"
               tick={{ fill: 'hsl(var(--muted-foreground))' }}
             />
@@ -55,21 +55,33 @@ export function VolumeChart() {
               }}
             />
             <Legend />
-            <Line 
+            <Line
               yAxisId="left"
-              type="monotone" 
-              dataKey="volume" 
-              stroke="hsl(var(--primary))" 
+              type="monotone"
+              dataKey="revenueUsd"
+              stroke="hsl(var(--primary))"
               strokeWidth={2}
-              name="Volume (USDC)"
+              name="Revenue (USD)"
+              dot={false}
             />
             <Line 
               yAxisId="right"
               type="monotone" 
-              dataKey="transactions" 
+              dataKey="transactionCount" 
               stroke="hsl(var(--accent-foreground))" 
               strokeWidth={2}
               name="Transactions"
+              dot={false}
+            />
+            <Line
+              yAxisId="right"
+              type="monotone"
+              dataKey="walletCount"
+              stroke="hsl(var(--secondary-foreground))"
+              strokeWidth={2}
+              name="Active Wallets"
+              strokeDasharray="4 3"
+              dot={false}
             />
           </LineChart>
         </ResponsiveContainer>

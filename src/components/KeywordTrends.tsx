@@ -51,7 +51,7 @@ export function KeywordTrends() {
     <Card>
       <CardHeader>
         <CardTitle>Keyword Trends</CardTitle>
-        <CardDescription>Most popular keywords in traded domains</CardDescription>
+        <CardDescription>Top motifs in sales over the last 7 days</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

@@ -8,9 +8,10 @@ interface StatCardProps {
   change?: number
   icon: LucideIcon
   description?: string
+  changeLabel?: string
 }
 
-export function StatCard({ title, value, change, icon: Icon, description }: StatCardProps) {
+export function StatCard({ title, value, change, icon: Icon, description, changeLabel }: StatCardProps) {
   const isPositive = change && change > 0
   const isNegative = change && change < 0
 
@@ -29,7 +30,7 @@ export function StatCard({ title, value, change, icon: Icon, description }: Stat
             isNegative && 'text-red-600',
             !isPositive && !isNegative && 'text-muted-foreground'
           )}>
-            {isPositive && '+'}{change.toFixed(2)}% from last 24h
+            {isPositive && '+'}{change.toFixed(2)}% {changeLabel ?? 'vs previous period'}
           </p>
         )}
         {description && (

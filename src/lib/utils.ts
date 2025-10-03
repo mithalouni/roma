@@ -15,13 +15,14 @@ export function formatNumber(num: number): string {
   return num.toString()
 }
 
-export function formatCurrency(amount: number, currency: string = 'USDC'): string {
+export function formatCurrency(amount: number, currency: string = 'USD'): string {
   return `${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`
 }
 
 export function formatAddress(address: string): string {
   if (!address) return ''
-  return `${address.slice(0, 6)}...${address.slice(-4)}`
+  const normalized = address.includes(':') ? address.split(':').pop() ?? address : address
+  return `${normalized.slice(0, 6)}...${normalized.slice(-4)}`
 }
 
 export function formatDate(timestamp: number): string {
