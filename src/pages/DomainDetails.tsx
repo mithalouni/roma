@@ -1,8 +1,12 @@
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, ExternalLink, Clock, User, Shield, Coins, TrendingUp, Package, History, ArrowDownLeft, ArrowUpRight, Tag, Zap } from 'lucide-react'
+import { useMemo } from 'react'
+import { ArrowLeft, ExternalLink, Clock, User, Shield, Coins, TrendingUp, Package, History, ArrowDownLeft, ArrowUpRight, Tag, Zap, BarChart3, Target } from 'lucide-react'
 import { useDomainSearch, useDomainTransactionHistory } from '../hooks/useDomaData'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
 import { formatAddress, formatCurrency, formatDateTime } from '../lib/utils'
+import { calculateDomainValueScore } from '../services/domaService'
+import { DomainPriceChart } from '../components/DomainPriceChart'
+import { DomainValueAnalysis } from '../components/DomainValueAnalysis'
 
 const formatIsoDateTime = (iso?: string | null) => {
   if (!iso) return '—'
@@ -24,6 +28,17 @@ export function DomainDetails() {
   const normalizedDomain = domainName?.toLowerCase() || ''
   const { data, isFetching, isError, error } = useDomainSearch(normalizedDomain, Boolean(normalizedDomain))
   const { data: transactionHistory, isFetching: isFetchingHistory } = useDomainTransactionHistory(normalizedDomain, Boolean(normalizedDomain))
+
+  // Calculate value score
+  const valueScore = useMemo(() => {
+    if (!data || !transactionHistory) return null
+    return calculateDomainValueScore(
+      data.domainName,
+      transactionHistory,
+      data.activeOffersCount,
+      data.isFractionalized
+    )
+  }, [data, transactionHistory])
 
   if (!domainName) {
     return (
@@ -95,6 +110,42 @@ export function DomainDetails() {
 
         {data && (
           <>
+            {/* AI Value Analysis */}
+            {valueScore && transactionHistory && transactionHistory.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Target className="mr-2 h-5 w-5 text-primary" />
+                    AI Value Analysis
+                  </CardTitle>
+                  <CardDescription>
+                    AI-driven scoring based on domain characteristics, market activity, and price trends
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <DomainValueAnalysis valueScore={valueScore} />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Price History Chart */}
+            {transactionHistory && transactionHistory.filter(tx => tx.type === 'PURCHASED' && tx.priceUsd > 0).length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <BarChart3 className="mr-2 h-5 w-5" />
+                    Price History
+                  </CardTitle>
+                  <CardDescription>
+                    Historical sale prices for this domain over time
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <DomainPriceChart transactions={transactionHistory} />
+                </CardContent>
+              </Card>
+            )}
+
             {/* Domain Overview */}
             <Card>
               <CardHeader>

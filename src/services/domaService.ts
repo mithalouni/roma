@@ -769,6 +769,202 @@ export interface DomainTransactionHistory {
   tokenId?: string
 }
 
+export interface DomainValueScore {
+  overallScore: number // 0-100
+  recommendation: 'strong_buy' | 'buy' | 'hold' | 'avoid'
+  factors: {
+    lengthScore: number // 0-100
+    keywordScore: number // 0-100
+    activityScore: number // 0-100
+    priceScore: number // 0-100
+    trendScore: number // 0-100
+  }
+  analysis: {
+    strengths: string[]
+    weaknesses: string[]
+    insights: string[]
+  }
+}
+
+export const calculateDomainValueScore = (
+  domainName: string,
+  transactionHistory: DomainTransactionHistory[],
+  activeOffersCount: number,
+  isFractionalized: boolean
+): DomainValueScore => {
+  const name = domainName.toLowerCase()
+  const nameParts = name.split('.')
+  const domainOnly = nameParts[0] || name
+  const tld = nameParts[1] || ''
+
+  // 1. Length Score (shorter = better, 1-3 chars = 100, 4-6 = 80, 7-10 = 60, etc.)
+  const length = domainOnly.length
+  let lengthScore = 100
+  if (length <= 3) lengthScore = 100
+  else if (length <= 6) lengthScore = 80
+  else if (length <= 10) lengthScore = 60
+  else if (length <= 15) lengthScore = 40
+  else lengthScore = 20
+
+  // 2. Keyword Score (check for premium keywords)
+  const premiumKeywords = ['ai', 'web3', 'defi', 'nft', 'dao', 'crypto', 'meta', 'eth', 'btc', 'token', 'swap', 'dex']
+  const trendingKeywords = ['agent', 'llm', 'yield', 'stake', 'farm', 'mint', 'game', 'social', 'pay']
+  const commonWords = ['app', 'net', 'digital', 'tech', 'online', 'hub', 'finance', 'trade']
+
+  let keywordScore = 30 // base
+  const lowerDomain = domainOnly.toLowerCase()
+
+  if (premiumKeywords.some(kw => lowerDomain.includes(kw))) keywordScore = 100
+  else if (trendingKeywords.some(kw => lowerDomain.includes(kw))) keywordScore = 75
+  else if (commonWords.some(kw => lowerDomain.includes(kw))) keywordScore = 50
+
+  // Check for numeric only (lower value)
+  if (/^\d+$/.test(domainOnly)) keywordScore = Math.max(keywordScore, 40)
+
+  // 3. Activity Score (based on transaction count and recency)
+  const purchases = transactionHistory.filter(tx => tx.type === 'PURCHASED')
+  const recentPurchases = purchases.filter(tx => {
+    const daysSince = (Date.now() / 1000 - tx.timestamp) / 86400
+    return daysSince <= 30
+  })
+
+  let activityScore = 0
+  if (purchases.length === 0) activityScore = 20
+  else if (purchases.length <= 2) activityScore = 40
+  else if (purchases.length <= 5) activityScore = 60
+  else if (purchases.length <= 10) activityScore = 80
+  else activityScore = 100
+
+  // Boost for recent activity
+  if (recentPurchases.length > 0) activityScore = Math.min(100, activityScore + 20)
+
+  // Boost for active offers
+  if (activeOffersCount > 0) activityScore = Math.min(100, activityScore + 15)
+
+  // 4. Price Score (volatility and trend)
+  let priceScore = 50 // neutral if no data
+  if (purchases.length >= 2) {
+    const prices = purchases.map(tx => tx.priceUsd).filter(p => p > 0)
+    if (prices.length >= 2) {
+      const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length
+      const latestPrice = prices[0]
+      const oldestPrice = prices[prices.length - 1]
+
+      // Price appreciation is good
+      if (latestPrice > oldestPrice) {
+        const appreciationPct = ((latestPrice - oldestPrice) / oldestPrice) * 100
+        if (appreciationPct > 50) priceScore = 90
+        else if (appreciationPct > 20) priceScore = 75
+        else priceScore = 60
+      } else {
+        // Price depreciation
+        const depreciationPct = ((oldestPrice - latestPrice) / oldestPrice) * 100
+        if (depreciationPct > 50) priceScore = 20
+        else if (depreciationPct > 20) priceScore = 40
+        else priceScore = 55
+      }
+
+      // Stability bonus - low volatility is good
+      const variance = prices.reduce((sum, p) => sum + Math.pow(p - avgPrice, 2), 0) / prices.length
+      const coefficientOfVariation = Math.sqrt(variance) / avgPrice
+      if (coefficientOfVariation < 0.2) priceScore = Math.min(100, priceScore + 10)
+    }
+  }
+
+  // 5. Trend Score (based on market activity)
+  let trendScore = 50 // neutral
+  const last30Days = transactionHistory.filter(tx => {
+    const daysSince = (Date.now() / 1000 - tx.timestamp) / 86400
+    return daysSince <= 30
+  })
+  const prev30Days = transactionHistory.filter(tx => {
+    const daysSince = (Date.now() / 1000 - tx.timestamp) / 86400
+    return daysSince > 30 && daysSince <= 60
+  })
+
+  if (last30Days.length > prev30Days.length) {
+    const growth = ((last30Days.length - prev30Days.length) / Math.max(prev30Days.length, 1)) * 100
+    if (growth > 100) trendScore = 95
+    else if (growth > 50) trendScore = 80
+    else if (growth > 20) trendScore = 70
+    else trendScore = 60
+  } else if (last30Days.length < prev30Days.length) {
+    trendScore = 30
+  }
+
+  // Fractionalization bonus (indicates high value)
+  if (isFractionalized) {
+    lengthScore = Math.min(100, lengthScore + 10)
+    activityScore = Math.min(100, activityScore + 10)
+  }
+
+  // Premium TLD bonus
+  const premiumTlds = ['eth', 'com', 'io', 'xyz', 'crypto']
+  if (premiumTlds.includes(tld)) {
+    keywordScore = Math.min(100, keywordScore + 10)
+  }
+
+  // Calculate weighted overall score
+  const overallScore = Math.round(
+    lengthScore * 0.25 +
+    keywordScore * 0.25 +
+    activityScore * 0.20 +
+    priceScore * 0.15 +
+    trendScore * 0.15
+  )
+
+  // Determine recommendation
+  let recommendation: DomainValueScore['recommendation']
+  if (overallScore >= 80) recommendation = 'strong_buy'
+  else if (overallScore >= 65) recommendation = 'buy'
+  else if (overallScore >= 45) recommendation = 'hold'
+  else recommendation = 'avoid'
+
+  // Generate insights
+  const strengths: string[] = []
+  const weaknesses: string[] = []
+  const insights: string[] = []
+
+  if (lengthScore >= 80) strengths.push('Short, memorable domain name')
+  else if (lengthScore < 40) weaknesses.push('Long domain name may reduce value')
+
+  if (keywordScore >= 75) strengths.push('Contains premium or trending keywords')
+  else if (keywordScore < 50) weaknesses.push('Generic keywords, limited market appeal')
+
+  if (activityScore >= 70) strengths.push('High trading activity indicates strong demand')
+  else if (activityScore < 40) weaknesses.push('Low trading activity, limited liquidity')
+
+  if (priceScore >= 70) strengths.push('Strong price appreciation trend')
+  else if (priceScore < 40) weaknesses.push('Price depreciation or high volatility')
+
+  if (trendScore >= 70) strengths.push('Increasing market momentum')
+  else if (trendScore < 40) weaknesses.push('Declining market interest')
+
+  if (isFractionalized) insights.push('Fractionalized ownership suggests institutional interest')
+  if (activeOffersCount > 3) insights.push(`${activeOffersCount} active offers indicate competitive bidding`)
+  if (purchases.length > 5) insights.push(`${purchases.length} historical transactions show proven market demand`)
+
+  const avgPurchasePrice = purchases.reduce((sum, tx) => sum + tx.priceUsd, 0) / Math.max(purchases.length, 1)
+  if (avgPurchasePrice > 1000) insights.push('High average purchase price indicates premium asset')
+
+  return {
+    overallScore,
+    recommendation,
+    factors: {
+      lengthScore,
+      keywordScore,
+      activityScore,
+      priceScore,
+      trendScore,
+    },
+    analysis: {
+      strengths,
+      weaknesses,
+      insights,
+    },
+  }
+}
+
 export const getDomainTransactionHistory = async (domainName: string): Promise<DomainTransactionHistory[]> => {
   if (!domainName) return []
 
