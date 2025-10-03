@@ -258,11 +258,11 @@ const analyticsRangeDurationsMs: Record<AnalyticsTimeRange, number> = {
 }
 
 const analyticsRangeTakeLimit: Record<AnalyticsTimeRange, number> = {
-  '1h': 200,
-  '24h': 400,
-  '7d': 600,
-  '30d': 800,
-  '1y': 1000,
+  '1h': 100,
+  '24h': 100,
+  '7d': 100,
+  '30d': 100,
+  '1y': 100,
 }
 
 const extractKeywords = (domainName: string) => {

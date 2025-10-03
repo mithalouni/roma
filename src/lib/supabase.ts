@@ -1,9 +1,29 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = 'https://bxlksmhjzndopuavihlw.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4bGtzbWhqem5kb3B1YXZpaGx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyODI5MDcsImV4cCI6MjA3NDg1ODkwN30.h2x8L4emY-i8tefhX7JsE-HSWXuRKE_abQ2qm-bHMQA'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables')
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+export interface UserAlert {
+  id: string
+  wallet_address: string
+  email: string
+  track_favorites: boolean
+  track_my_domains: boolean
+  track_trends: boolean
+  track_other: string | null
+  frequency: 'daily' | 'weekly' | 'monthly'
+  last_sent_at: string | null
+  next_send_at: string | null
+  active: boolean
+  created_at: string
+  updated_at: string
+}
 
 /**
  * Execute SQL query using Supabase RPC or direct query

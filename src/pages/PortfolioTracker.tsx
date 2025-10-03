@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Wallet, TrendingUp, DollarSign, BarChart3, AlertCircle, Target, Sparkles, ExternalLink, Lightbulb, LineChart, Heart } from 'lucide-react'
+import { Wallet, TrendingUp, DollarSign, BarChart3, AlertCircle, Target, Sparkles, ExternalLink, Lightbulb, LineChart, Heart, Bell } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
 import { useUserDomains, useDomainTransactionHistory, useTrendingDomains, useMarketActivity } from '../hooks/useDomaData'
 import { formatCurrency } from '../lib/utils'
@@ -10,11 +10,12 @@ import type { UserDomain } from '../services/domaService'
 import { XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Area, AreaChart } from 'recharts'
 import { PortfolioAIAdvisor } from '../components/PortfolioAIAdvisor'
 import { FavoritesDomains } from '../components/FavoritesDomains'
+import { AlertsTab } from '../components/AlertsTab'
 
 export function PortfolioTracker() {
   const { address, isConnected } = useAccount()
   const { data: domains, isLoading, isError } = useUserDomains(address, isConnected)
-  const [activeTab, setActiveTab] = useState<'portfolio' | 'recommendations' | 'favorites'>('portfolio')
+  const [activeTab, setActiveTab] = useState<'portfolio' | 'recommendations' | 'favorites' | 'alerts'>('portfolio')
 
   if (!isConnected) {
     return (
@@ -128,6 +129,19 @@ export function PortfolioTracker() {
                   Recommendations
                 </div>
               </button>
+              <button
+                onClick={() => setActiveTab('alerts')}
+                className={`px-4 py-2 font-medium transition-colors border-b-2 ${
+                  activeTab === 'alerts'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Bell className="w-4 h-4" />
+                  Alerts
+                </div>
+              </button>
             </div>
 
             {activeTab === 'portfolio' ? (
@@ -196,6 +210,8 @@ export function PortfolioTracker() {
               )
             ) : activeTab === 'favorites' ? (
               <FavoritesDomains walletAddress={address || ''} />
+            ) : activeTab === 'alerts' ? (
+              <AlertsTab walletAddress={address || ''} />
             ) : (
               <DomainRecommendations userDomains={domains} />
             )}
