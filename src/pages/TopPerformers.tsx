@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
-import { Trophy, TrendingUp, Zap, Crown, Award, Target, ArrowUpRight, ChevronRight } from 'lucide-react'
+import { Trophy, TrendingUp, Zap, Crown, Award, Target, ArrowUpRight, ChevronRight, LoaderCircle } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
 import { useMarketActivity } from '../hooks/useDomaData'
 import { formatCurrency } from '../lib/utils'
 import { Link } from 'react-router-dom'
+import { TooltipProvider } from '@radix-ui/react-tooltip'
 
 interface DomainPerformance {
   domainName: string
@@ -110,19 +111,8 @@ export function TopPerformers() {
     }
   }, [data])
 
-  const getGrowthColor = (growth: string) => {
-    switch (growth) {
-      case 'Explosive':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-      case 'Strong':
-        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-      case 'Moderate':
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-      case 'Emerging':
-        return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-      default:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
-    }
+  const getGrowthColor = () => {
+    return 'bg-[#163C6D] text-white'
   }
 
   const getRankBadge = (rank: number) => {
@@ -132,32 +122,34 @@ export function TopPerformers() {
     return <span className="text-muted-foreground font-semibold">#{rank}</span>
   }
 
+  if (isLoading) {
+    return (
+      <TooltipProvider delayDuration={200}>
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <LoaderCircle className="h-12 w-12 animate-spin text-primary" aria-hidden />
+            <p className="text-lg font-medium text-muted-foreground">Loading top performers...</p>
+          </div>
+        </main>
+      </TooltipProvider>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <main className="container py-6 space-y-6">
-        {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight flex items-center gap-3">
-            <Trophy className="w-8 h-8 text-yellow-500" />
-            Top Performers
-          </h1>
-          <p className="text-muted-foreground">
-            Discover the highest ROI domains, most active traders, and rising stars on Doma Protocol
-          </p>
-        </div>
+    <TooltipProvider delayDuration={200}>
+      <main className="min-h-screen bg-gray-50 py-8">
+        <div className="container w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 mx-auto space-y-8">
+          {/* Header */}
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold tracking-tight">
+              Top Performers
+            </h1>
+            <p className="text-muted-foreground">
+              Discover the highest ROI domains, most active traders, and rising stars on Doma Protocol
+            </p>
+          </div>
 
-        {isLoading && (
-          <Card>
-            <CardContent className="py-12">
-              <div className="flex items-center justify-center gap-4">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                <p className="text-muted-foreground">Loading top performers...</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {!isLoading && performers && (
+        {performers && (
           <>
             {/* Top by Volume */}
             <Card>
@@ -194,9 +186,11 @@ export function TopPerformers() {
                       </div>
                       <div className="text-right">
                         <div className="text-xl font-bold text-green-600">{formatCurrency(domain.volume)}</div>
-                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getGrowthColor(domain.growth)}`}>
-                          {domain.growth}
-                        </span>
+                        {domain.growth !== 'Moderate' && (
+                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getGrowthColor()}`}>
+                            {domain.growth}
+                          </span>
+                        )}
                       </div>
                     </Link>
                   ))}
@@ -322,11 +316,13 @@ export function TopPerformers() {
                           <span className="font-semibold">{formatCurrency(domain.avgPrice)}</span>
                         </div>
                       </div>
-                      <div className="mt-3">
-                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getGrowthColor(domain.growth)}`}>
-                          {domain.growth}
-                        </span>
-                      </div>
+                      {domain.growth !== 'Moderate' && (
+                        <div className="mt-3">
+                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getGrowthColor()}`}>
+                            {domain.growth}
+                          </span>
+                        </div>
+                      )}
                     </Link>
                   ))}
                 </div>
@@ -373,7 +369,8 @@ export function TopPerformers() {
             </Card>
           </>
         )}
+        </div>
       </main>
-    </div>
+    </TooltipProvider>
   )
 }

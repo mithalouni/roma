@@ -13,32 +13,32 @@ export function DomainValueAnalysis({ valueScore }: DomainValueAnalysisProps) {
       case 'strong_buy':
         return {
           label: 'Strong Buy',
-          color: 'text-green-700 dark:text-green-400',
-          bgColor: 'bg-green-100 dark:bg-green-900/30',
+          color: 'text-white',
+          bgColor: 'bg-green-700',
           icon: <TrendingUp className="h-5 w-5" />,
           description: 'Excellent investment opportunity with strong fundamentals',
         }
       case 'buy':
         return {
           label: 'Buy',
-          color: 'text-blue-700 dark:text-blue-400',
-          bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+          color: 'text-white',
+          bgColor: 'bg-blue-700',
           icon: <TrendingUp className="h-5 w-5" />,
           description: 'Good investment potential, consider acquiring',
         }
       case 'hold':
         return {
           label: 'Hold',
-          color: 'text-yellow-700 dark:text-yellow-400',
-          bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
+          color: 'text-white',
+          bgColor: 'bg-orange-600',
           icon: <Minus className="h-5 w-5" />,
           description: 'Moderate potential, wait for better entry point',
         }
       case 'avoid':
         return {
           label: 'Avoid',
-          color: 'text-red-700 dark:text-red-400',
-          bgColor: 'bg-red-100 dark:bg-red-900/30',
+          color: 'text-white',
+          bgColor: 'bg-red-700',
           icon: <TrendingDown className="h-5 w-5" />,
           description: 'Limited investment potential at current valuation',
         }
@@ -168,14 +168,6 @@ export function DomainValueAnalysis({ valueScore }: DomainValueAnalysisProps) {
           </ul>
         </div>
       )}
-
-      {/* Disclaimer */}
-      <div className="rounded-md border border-yellow-500/20 bg-yellow-500/10 p-3">
-        <p className="text-xs text-muted-foreground">
-          <strong>Disclaimer:</strong> This AI-generated score is for informational purposes only and should not be considered financial advice.
-          Always conduct your own research before making investment decisions.
-        </p>
-      </div>
     </div>
   )
 }

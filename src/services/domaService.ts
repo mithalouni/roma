@@ -674,7 +674,7 @@ export const getMarketActivity = async (analyticsRange: AnalyticsTimeRange = '30
         }
       })
       .sort((a, b) => b.totalVolume - a.totalVolume)
-      .slice(0, 5)
+      .slice(0, 100)
 
     const keywordTrends: KeywordTrend[] = Array.from(keywordCurrent.entries())
       .map(([keyword, stats]) => {

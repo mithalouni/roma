@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Wallet, TrendingUp, DollarSign, BarChart3, AlertCircle, Target, Sparkles, ExternalLink, Lightbulb, LineChart, Heart, Bell } from 'lucide-react'
+import { Wallet, TrendingUp, DollarSign, BarChart3, AlertCircle, Target, Sparkles, ExternalLink, Lightbulb, LineChart, Heart, Bell, LoaderCircle } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
 import { useUserDomains, useDomainTransactionHistory, useTrendingDomains, useMarketActivity } from '../hooks/useDomaData'
 import { formatCurrency } from '../lib/utils'
@@ -11,6 +11,7 @@ import { XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Area, AreaCh
 import { PortfolioAIAdvisor } from '../components/PortfolioAIAdvisor'
 import { FavoritesDomains } from '../components/FavoritesDomains'
 import { AlertsTab } from '../components/AlertsTab'
+import { TooltipProvider } from '@radix-ui/react-tooltip'
 
 export function PortfolioTracker() {
   const { address, isConnected } = useAccount()
@@ -19,11 +20,54 @@ export function PortfolioTracker() {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-background">
-        <main className="container py-6 space-y-6">
+      <TooltipProvider delayDuration={200}>
+        <main className="min-h-screen bg-gray-50 py-8">
+          <div className="container w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 mx-auto space-y-8">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold tracking-tight">
+                Portfolio Tracker
+              </h1>
+              <p className="text-muted-foreground">
+                View your owned domains with AI-powered valuations and analytics
+              </p>
+            </div>
+
+            <Card>
+              <CardContent className="py-12">
+                <div className="flex flex-col items-center justify-center text-center">
+                  <Wallet className="w-16 h-16 text-muted-foreground/50 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Connect Your Wallet</h3>
+                  <p className="text-muted-foreground max-w-md">
+                    Connect your wallet to view your domain portfolio and get AI-powered valuations.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </TooltipProvider>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <TooltipProvider delayDuration={200}>
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <LoaderCircle className="h-12 w-12 animate-spin text-primary" aria-hidden />
+            <p className="text-lg font-medium text-muted-foreground">Loading your portfolio...</p>
+          </div>
+        </main>
+      </TooltipProvider>
+    )
+  }
+
+  return (
+    <TooltipProvider delayDuration={200}>
+      <main className="min-h-screen bg-gray-50 py-8">
+        <div className="container w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 mx-auto space-y-8">
           <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight flex items-center gap-3">
-              <Wallet className="w-8 h-8 text-purple-600" />
+            <h1 className="text-4xl font-bold tracking-tight">
               Portfolio Tracker
             </h1>
             <p className="text-muted-foreground">
@@ -31,71 +75,30 @@ export function PortfolioTracker() {
             </p>
           </div>
 
-          <Card>
-            <CardContent className="py-12">
-              <div className="flex flex-col items-center justify-center text-center">
-                <Wallet className="w-16 h-16 text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Connect Your Wallet</h3>
-                <p className="text-muted-foreground max-w-md">
-                  Connect your wallet to view your domain portfolio and get AI-powered valuations.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
-    )
-  }
+          {isError && (
+            <Card>
+              <CardContent className="py-12">
+                <div className="flex flex-col items-center justify-center text-center">
+                  <AlertCircle className="w-16 h-16 text-destructive/50 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Error Loading Portfolio</h3>
+                  <p className="text-muted-foreground max-w-md">
+                    Unable to fetch your domains. Please try again later.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-  return (
-    <div className="min-h-screen bg-background">
-      <main className="container py-6 space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight flex items-center gap-3">
-            <Wallet className="w-8 h-8 text-purple-600" />
-            Portfolio Tracker
-          </h1>
-          <p className="text-muted-foreground">
-            View your owned domains with AI-powered valuations and analytics
-          </p>
-        </div>
-
-        {isLoading && (
-          <Card>
-            <CardContent className="py-12">
-              <div className="flex flex-col items-center justify-center text-center">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Loading Your Portfolio</h3>
-                <p className="text-muted-foreground">Fetching your domains from the blockchain...</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {isError && (
-          <Card>
-            <CardContent className="py-12">
-              <div className="flex flex-col items-center justify-center text-center">
-                <AlertCircle className="w-16 h-16 text-destructive/50 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Error Loading Portfolio</h3>
-                <p className="text-muted-foreground max-w-md">
-                  Unable to fetch your domains. Please try again later.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {!isLoading && !isError && domains && (
+          {!isError && domains && (
           <>
             {/* Tabs */}
-            <div className="flex gap-2 border-b">
+            <div className="flex gap-2 border-b border-gray-200">
               <button
                 onClick={() => setActiveTab('portfolio')}
-                className={`px-4 py-2 font-medium transition-colors border-b-2 ${
+                className={`px-4 py-3 transition-all border-b-4 -mb-px ${
                   activeTab === 'portfolio'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                    ? 'border-[#163C6D] text-[#163C6D] bg-white font-bold'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-gray-50 font-medium'
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -105,10 +108,10 @@ export function PortfolioTracker() {
               </button>
               <button
                 onClick={() => setActiveTab('favorites')}
-                className={`px-4 py-2 font-medium transition-colors border-b-2 ${
+                className={`px-4 py-3 transition-all border-b-4 -mb-px ${
                   activeTab === 'favorites'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                    ? 'border-[#163C6D] text-[#163C6D] bg-white font-bold'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-gray-50 font-medium'
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -118,10 +121,10 @@ export function PortfolioTracker() {
               </button>
               <button
                 onClick={() => setActiveTab('recommendations')}
-                className={`px-4 py-2 font-medium transition-colors border-b-2 ${
+                className={`px-4 py-3 transition-all border-b-4 -mb-px ${
                   activeTab === 'recommendations'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                    ? 'border-[#163C6D] text-[#163C6D] bg-white font-bold'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-gray-50 font-medium'
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -131,10 +134,10 @@ export function PortfolioTracker() {
               </button>
               <button
                 onClick={() => setActiveTab('alerts')}
-                className={`px-4 py-2 font-medium transition-colors border-b-2 ${
+                className={`px-4 py-3 transition-all border-b-4 -mb-px ${
                   activeTab === 'alerts'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                    ? 'border-[#163C6D] text-[#163C6D] bg-white font-bold'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-gray-50 font-medium'
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -216,9 +219,10 @@ export function PortfolioTracker() {
               <DomainRecommendations userDomains={domains} />
             )}
           </>
-        )}
+          )}
+        </div>
       </main>
-    </div>
+    </TooltipProvider>
   )
 }
 
@@ -301,43 +305,49 @@ function PortfolioDomainCard({ domain }: { domain: UserDomain }) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-md bg-blue-50 dark:bg-blue-900/20 p-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-400 mb-2">
-            <DollarSign className="w-4 h-4" />
-            Estimated Value
+        <div className="rounded-lg bg-[#E6EEFF] p-4 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-[#D0DCFF] text-black">
+              <DollarSign className="w-4 h-4" />
+            </span>
+            <span className="text-sm font-semibold text-black">Estimated Value</span>
           </div>
-          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+          <div className="text-2xl font-bold text-black">
             {formatCurrency(domain.estimatedValueUsd)}
           </div>
           {domain.highestOfferUsd > 0 && (
-            <div className="text-sm mt-1 text-blue-600 dark:text-blue-400">
+            <div className="text-sm mt-2 font-medium text-black">
               Best offer: {formatCurrency(domain.highestOfferUsd)}
             </div>
           )}
         </div>
 
-        <div className="rounded-md bg-green-50 dark:bg-green-900/20 p-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-green-700 dark:text-green-400 mb-2">
-            <Target className="w-4 h-4" />
-            AI Score
+        <div className="rounded-lg bg-[#E6F7EB] p-4 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-[#CDEFD8] text-black">
+              <Target className="w-4 h-4" />
+            </span>
+            <span className="text-sm font-semibold text-black">AI Score</span>
           </div>
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+          <div className="text-2xl font-bold text-black">
             {valueScore.overallScore}/100
           </div>
-          <div className="text-sm mt-1 text-green-600 dark:text-green-400 capitalize">
+          <div className="text-sm mt-2 font-medium text-black capitalize">
             {valueScore.recommendation.replace('_', ' ')}
           </div>
         </div>
 
-        <div className="rounded-md bg-purple-50 dark:bg-purple-900/20 p-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-purple-700 dark:text-purple-400 mb-2">
-            <BarChart3 className="w-4 h-4" />
-            Market Activity
+        <div className="rounded-lg bg-[#EFE6FF] p-4 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-[#E0D0FF] text-black">
+              <BarChart3 className="w-4 h-4" />
+            </span>
+            <span className="text-sm font-semibold text-black">Market Activity</span>
           </div>
-          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+          <div className="text-2xl font-bold text-black">
             {domain.activeListings}
           </div>
-          <div className="text-sm mt-1 text-purple-600 dark:text-purple-400">
+          <div className="text-sm mt-2 font-medium text-black">
             Active listings
           </div>
         </div>
@@ -566,15 +576,7 @@ function DomainRecommendations({ userDomains }: { userDomains: UserDomain[] }) {
                       </h3>
                       <p className="text-sm text-muted-foreground mt-1">{rec.reason}</p>
                     </div>
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${
-                        rec.confidence === 'high'
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                          : rec.confidence === 'medium'
-                          ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                          : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
-                      }`}
-                    >
+                    <span className="px-2 py-1 rounded text-xs font-medium bg-[#163C6D] text-white">
                       {rec.confidence}
                     </span>
                   </div>

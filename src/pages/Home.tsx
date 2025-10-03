@@ -1,16 +1,37 @@
 import { TooltipProvider } from '@radix-ui/react-tooltip'
+import { LoaderCircle } from 'lucide-react'
 import { useState } from 'react'
 import { KeywordTrends } from '../components/KeywordTrends'
 import { MarketOverview } from '../components/MarketOverview'
 import { NetworkOverview } from '../components/NetworkOverview'
-import { RecentTransactions } from '../components/RecentTransactions'
 import { TopAccounts } from '../components/TopAccounts'
+import { TopDomainsByValue } from '../components/TopDomainsByValue'
 import { TrendingDomains } from '../components/TrendingDomains'
 import { VolumeChart } from '../components/VolumeChart'
+import { useMarketActivity, useNetworkStats, useDashboardStats } from '../hooks/useDomaData'
 import type { AnalyticsTimeRange } from '../types/analytics'
 
 export function Home() {
   const [timeRange] = useState<AnalyticsTimeRange>('30d')
+
+  const { isLoading: networkLoading } = useNetworkStats()
+  const { isLoading: dashboardLoading } = useDashboardStats(timeRange)
+  const { isLoading: activityLoading } = useMarketActivity(timeRange)
+
+  const isLoading = networkLoading || dashboardLoading || activityLoading
+
+  if (isLoading) {
+    return (
+      <TooltipProvider delayDuration={200}>
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <LoaderCircle className="h-12 w-12 animate-spin text-primary" aria-hidden />
+            <p className="text-lg font-medium text-muted-foreground">Loading analytics data...</p>
+          </div>
+        </main>
+      </TooltipProvider>
+    )
+  }
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -38,7 +59,7 @@ export function Home() {
             </div>
           </div>
 
-          <RecentTransactions timeRange={timeRange} />
+          <TopDomainsByValue timeRange={timeRange} />
         </div>
       </main>
     </TooltipProvider>

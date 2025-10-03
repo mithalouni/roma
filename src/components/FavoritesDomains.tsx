@@ -110,15 +110,15 @@ function FavoriteDomainCard({ domainName, onRemove, isRemoving }: FavoriteDomain
             </div>
           ) : domainData ? (
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-md bg-blue-50 dark:bg-blue-900/20 p-3">
-                <div className="text-xs text-muted-foreground mb-1">Active Offers</div>
-                <div className="font-bold text-blue-600 dark:text-blue-400">
+              <div className="rounded-md bg-[#E6EEFF] p-3">
+                <div className="text-xs font-semibold text-black mb-1">Active Offers</div>
+                <div className="font-bold text-black">
                   {domainData.activeOffersCount}
                 </div>
               </div>
-              <div className="rounded-md bg-green-50 dark:bg-green-900/20 p-3">
-                <div className="text-xs text-muted-foreground mb-1">Highest Offer</div>
-                <div className="font-bold text-green-600 dark:text-green-400">
+              <div className="rounded-md bg-[#E6F7EB] p-3">
+                <div className="text-xs font-semibold text-black mb-1">Highest Offer</div>
+                <div className="font-bold text-black">
                   {domainData.highestOffer ? formatCurrency(domainData.highestOffer.priceUsd) : '—'}
                 </div>
               </div>

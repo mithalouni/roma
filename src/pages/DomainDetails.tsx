@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { useMemo } from 'react'
-import { ArrowLeft, ExternalLink, Clock, User, Shield, Coins, TrendingUp, Package, History, ArrowDownLeft, ArrowUpRight, Tag, Zap, BarChart3, Target, Heart } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Clock, User, Shield, Coins, TrendingUp, Package, History, ArrowDownLeft, ArrowUpRight, Tag, Zap, BarChart3, Target, Heart, LoaderCircle } from 'lucide-react'
 import { useAccount } from 'wagmi'
 import { useDomainSearch, useDomainTransactionHistory } from '../hooks/useDomaData'
 import { useIsFavorited, useAddFavorite, useRemoveFavorite } from '../hooks/useFavorites'
@@ -11,6 +11,7 @@ import { DomainPriceChart } from '../components/DomainPriceChart'
 import { DomainValueAnalysis } from '../components/DomainValueAnalysis'
 import { GeminiRecommendation } from '../components/GeminiRecommendation'
 import { GeminiChatbot } from '../components/GeminiChatbot'
+import { TooltipProvider } from '@radix-ui/react-tooltip'
 
 const formatIsoDateTime = (iso?: string | null) => {
   if (!iso) return '—'
@@ -62,94 +63,101 @@ export function DomainDetails() {
 
   if (!domainName) {
     return (
-      <div className="container py-6">
-        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-6 text-center">
-          <p className="text-destructive">No domain specified</p>
-          <Link to="/" className="mt-4 inline-flex items-center text-sm text-primary hover:underline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Link>
-        </div>
-      </div>
+      <TooltipProvider delayDuration={200}>
+        <main className="min-h-screen bg-gray-50 py-8">
+          <div className="container w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 mx-auto">
+            <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-6 text-center">
+              <p className="text-destructive">No domain specified</p>
+              <Link to="/" className="mt-4 inline-flex items-center text-sm text-primary hover:underline">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Dashboard
+              </Link>
+            </div>
+          </div>
+        </main>
+      </TooltipProvider>
+    )
+  }
+
+  if (isFetching) {
+    return (
+      <TooltipProvider delayDuration={200}>
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <LoaderCircle className="h-12 w-12 animate-spin text-primary" aria-hidden />
+            <p className="text-lg font-medium text-muted-foreground">Loading domain data...</p>
+          </div>
+        </main>
+      </TooltipProvider>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b">
-        <div className="container py-4">
-          <Link to="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Link>
-        </div>
-      </div>
-
-      <main className="container py-6 space-y-6">
-        <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight">{normalizedDomain}</h1>
-            <p className="text-muted-foreground">
-              Complete on-chain data for this domain from the Doma Protocol
-            </p>
+    <TooltipProvider delayDuration={200}>
+      <main className="min-h-screen bg-gray-50 py-8">
+        <div className="container w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 mx-auto space-y-8">
+          {/* Back Button */}
+          <div>
+            <Link to="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Dashboard
+            </Link>
           </div>
-          {isConnected && address && (
-            <button
-              onClick={handleToggleFavorite}
-              disabled={addFavorite.isPending || removeFavorite.isPending}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
-                isFavorited
-                  ? 'bg-red-50 border-red-300 text-red-700 hover:bg-red-100 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400'
-                  : 'bg-background border-border text-muted-foreground hover:border-primary hover:text-primary'
-              }`}
-              title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
-            >
-              <Heart
-                className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`}
-              />
-              <span className="text-sm font-medium">
-                {isFavorited ? 'Favorited' : 'Add to Favorites'}
-              </span>
-            </button>
+
+          {/* Header */}
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold tracking-tight">{normalizedDomain}</h1>
+              <p className="text-muted-foreground">
+                Complete on-chain data for this domain from the Doma Protocol
+              </p>
+            </div>
+            {isConnected && address && (
+              <button
+                onClick={handleToggleFavorite}
+                disabled={addFavorite.isPending || removeFavorite.isPending}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                  isFavorited
+                    ? 'bg-red-50 border-red-300 text-red-700 hover:bg-red-100 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400'
+                    : 'bg-background border-border text-muted-foreground hover:border-primary hover:text-primary'
+                }`}
+                title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+              >
+                <Heart
+                  className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`}
+                />
+                <span className="text-sm font-medium">
+                  {isFavorited ? 'Favorited' : 'Add to Favorites'}
+                </span>
+              </button>
+            )}
+          </div>
+
+          {isError && (
+            <Card>
+              <CardContent className="py-6">
+                <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-destructive">
+                  {(error as Error)?.message || 'Failed to load domain data. Please try again.'}
+                </div>
+              </CardContent>
+            </Card>
           )}
-        </div>
 
-        {isFetching && (
-          <Card>
-            <CardContent className="py-12">
-              <div className="flex items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                <span className="ml-3 text-muted-foreground">Loading domain data...</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+          {!data && !isError && (
+            <Card>
+              <CardContent className="py-12">
+                <div className="text-center">
+                  <Shield className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                  <h3 className="mt-4 text-lg font-semibold">Domain Not Found</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    No on-chain record found for <span className="font-semibold">{normalizedDomain}</span> on Doma testnet.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-        {isError && (
-          <Card>
-            <CardContent className="py-6">
-              <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-destructive">
-                {(error as Error)?.message || 'Failed to load domain data. Please try again.'}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {!isFetching && !data && !isError && (
-          <Card>
-            <CardContent className="py-12">
-              <div className="text-center">
-                <Shield className="mx-auto h-12 w-12 text-muted-foreground/50" />
-                <h3 className="mt-4 text-lg font-semibold">Domain Not Found</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  No on-chain record found for <span className="font-semibold">{normalizedDomain}</span> on Doma testnet.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {data && (
+          {data && (
           <>
             {/* AI Advisor Chatbot */}
             {valueScore && transactionHistory && (
@@ -180,46 +188,49 @@ export function DomainDetails() {
               />
             )}
 
-            {/* Gemini AI Recommendation */}
-            {valueScore && transactionHistory && (
-              <GeminiRecommendation
-                domainName={data.domainName}
-                aiScore={valueScore.overallScore}
-                transactionCount={transactionHistory.filter(tx => tx.type === 'PURCHASED').length}
-                averagePrice={
-                  transactionHistory
-                    .filter(tx => tx.type === 'PURCHASED' && tx.priceUsd > 0)
-                    .reduce((sum, tx) => sum + tx.priceUsd, 0) /
-                  Math.max(transactionHistory.filter(tx => tx.type === 'PURCHASED' && tx.priceUsd > 0).length, 1)
-                }
-                priceChange={(() => {
-                  const purchases = transactionHistory.filter(tx => tx.type === 'PURCHASED' && tx.priceUsd > 0)
-                  if (purchases.length < 2) return 0
-                  const latest = purchases[0].priceUsd
-                  const oldest = purchases[purchases.length - 1].priceUsd
-                  return oldest > 0 ? ((latest - oldest) / oldest) * 100 : 0
-                })()}
-                activeOffers={data.activeOffersCount}
-                isFractionalized={data.isFractionalized}
-              />
-            )}
-
-            {/* AI Value Analysis */}
+            {/* AI Analysis - Side by Side */}
             {valueScore && transactionHistory && transactionHistory.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Target className="mr-2 h-5 w-5 text-primary" />
-                    AI Value Analysis
-                  </CardTitle>
-                  <CardDescription>
-                    AI-driven scoring based on domain characteristics, market activity, and price trends
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <DomainValueAnalysis valueScore={valueScore} />
-                </CardContent>
-              </Card>
+              <div className="grid gap-6 lg:grid-cols-2">
+                {/* AI Value Analysis */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Target className="mr-2 h-5 w-5 text-primary" />
+                      AI Value Analysis
+                    </CardTitle>
+                    <CardDescription>
+                      AI-driven scoring based on domain characteristics, market activity, and price trends
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <DomainValueAnalysis valueScore={valueScore} />
+                  </CardContent>
+                </Card>
+
+                {/* Gemini AI Recommendation */}
+                <div>
+                  <GeminiRecommendation
+                    domainName={data.domainName}
+                    aiScore={valueScore.overallScore}
+                    transactionCount={transactionHistory.filter(tx => tx.type === 'PURCHASED').length}
+                    averagePrice={
+                      transactionHistory
+                        .filter(tx => tx.type === 'PURCHASED' && tx.priceUsd > 0)
+                        .reduce((sum, tx) => sum + tx.priceUsd, 0) /
+                      Math.max(transactionHistory.filter(tx => tx.type === 'PURCHASED' && tx.priceUsd > 0).length, 1)
+                    }
+                    priceChange={(() => {
+                      const purchases = transactionHistory.filter(tx => tx.type === 'PURCHASED' && tx.priceUsd > 0)
+                      if (purchases.length < 2) return 0
+                      const latest = purchases[0].priceUsd
+                      const oldest = purchases[purchases.length - 1].priceUsd
+                      return oldest > 0 ? ((latest - oldest) / oldest) * 100 : 0
+                    })()}
+                    activeOffers={data.activeOffersCount}
+                    isFractionalized={data.isFractionalized}
+                  />
+                </div>
+              </div>
             )}
 
             {/* Price History Chart */}
@@ -285,9 +296,9 @@ export function DomainDetails() {
                     <dt className="text-sm text-muted-foreground">Fractionalized</dt>
                     <dd className="font-medium">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        data.isFractionalized 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
-                          : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                        data.isFractionalized
+                          ? 'bg-[#163C6D] text-white'
+                          : 'bg-gray-200 text-gray-900'
                       }`}>
                         {data.isFractionalized ? 'Yes' : 'No'}
                       </span>
@@ -557,8 +568,9 @@ export function DomainDetails() {
               </CardContent>
             </Card>
           </>
-        )}
+          )}
+        </div>
       </main>
-    </div>
+    </TooltipProvider>
   )
 }

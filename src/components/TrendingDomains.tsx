@@ -1,26 +1,25 @@
+import { ExternalLink, Layers } from 'lucide-react'
 import type { AnalyticsTimeRange } from '../types/analytics'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card'
-import { useTrendingDomains } from '../hooks/useDomaData'
-import { formatCurrency } from '../lib/utils'
-import { Sparkline } from './dashboard/Sparkline'
-import { TrendPill } from './dashboard/TrendPill'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
+import { useRecentTransactions } from '../hooks/useDomaData'
+import { formatAddress, formatCurrency, formatDateTime } from '../lib/utils'
 
 interface TrendingDomainsProps {
   timeRange: AnalyticsTimeRange
 }
 
 export function TrendingDomains({ timeRange }: TrendingDomainsProps) {
-  const { data: domains, isLoading } = useTrendingDomains(timeRange)
+  const { data: transactions, isLoading } = useRecentTransactions(timeRange)
 
-  if (isLoading || !domains) {
+  if (isLoading || !transactions) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Trending Domains</CardTitle>
+          <CardTitle>Recent Activity</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[1, 2, 3, 4, 5].map((i) => (
+            {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="h-16 rounded-lg bg-muted animate-pulse" />
             ))}
           </div>
@@ -29,34 +28,48 @@ export function TrendingDomains({ timeRange }: TrendingDomainsProps) {
     )
   }
 
+  const recentFive = transactions.slice(0, 5)
+
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>Trending Domains</CardTitle>
+        <CardTitle>Recent Activity</CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
-        <ol className="divide-y divide-border/60" aria-label="Top trending domains">
-          {domains.map((domain, index) => (
-            <li key={domain.domainName} className="flex flex-col gap-4 py-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-start gap-4">
-                <span className="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
-                  {index + 1}
-                </span>
-                <div className="space-y-1">
-                  <p className="text-base font-semibold text-foreground">{domain.domainName}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {domain.transactionCount} {domain.transactionCount === 1 ? 'sale' : 'sales'} · Avg {formatCurrency(domain.averagePrice)}
+        <div className="space-y-3">
+          {recentFive.map((transaction) => (
+            <div
+              key={transaction.id}
+              className="group flex items-center gap-4 p-3 rounded-lg border bg-background transition hover:bg-muted/40 cursor-pointer"
+            >
+              <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Layers className="h-5 w-5" aria-hidden />
+              </span>
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {transaction.domainName}
                   </p>
-                  <p className="text-xs text-muted-foreground">Total volume {formatCurrency(domain.totalVolume)}</p>
+                  <span className="text-sm font-semibold text-foreground flex-shrink-0">
+                    {formatCurrency(transaction.priceUsd)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="truncate">{formatAddress(transaction.buyer)}</span>
+                    <span>←</span>
+                    <span className="truncate">{formatAddress(transaction.seller)}</span>
+                  </div>
+                  <span className="flex-shrink-0">{formatDateTime(transaction.timestamp)}</span>
                 </div>
               </div>
-              <div className="flex flex-1 items-center justify-between gap-6 lg:justify-end">
-                <Sparkline change={domain.priceChange24h} />
-                <TrendPill value={domain.priceChange24h} label="24h price change" />
-              </div>
-            </li>
+              <ExternalLink
+                aria-hidden
+                className="h-4 w-4 flex-shrink-0 text-muted-foreground transition group-hover:text-primary"
+              />
+            </div>
           ))}
-        </ol>
+        </div>
       </CardContent>
     </Card>
   )

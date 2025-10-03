@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bell, Trash2, Edit, Save, X, Mail, Calendar, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Bell, Trash2, Edit, Save, X, Mail, Calendar, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card'
 import { supabase, type UserAlert } from '../lib/supabase'
 
@@ -10,6 +10,7 @@ interface AlertsTabProps {
 export function AlertsTab({ walletAddress }: AlertsTabProps) {
   const [alerts, setAlerts] = useState<UserAlert[]>([])
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showNewForm, setShowNewForm] = useState(false)
   const [formData, setFormData] = useState({
@@ -48,15 +49,18 @@ export function AlertsTab({ walletAddress }: AlertsTabProps) {
   const handleSave = async () => {
     try {
       setSaveStatus(null)
+      setSaving(true)
 
       // Validate at least one option is selected
       if (!formData.track_favorites && !formData.track_my_domains && !formData.track_trends && !formData.track_other) {
         setSaveStatus({ type: 'error', message: 'Please select at least one alert type' })
+        setSaving(false)
         return
       }
 
       if (!formData.email) {
         setSaveStatus({ type: 'error', message: 'Please enter your email address' })
+        setSaving(false)
         return
       }
 
@@ -118,16 +122,20 @@ export function AlertsTab({ walletAddress }: AlertsTabProps) {
     } catch (error) {
       console.error('Error saving alert:', error)
       setSaveStatus({ type: 'error', message: 'Failed to save alert. Please try again.' })
+    } finally {
+      setSaving(false)
     }
   }
 
   const triggerImmediateEmail = async (wallet: string, email: string, preferences: typeof formData) => {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
       const response = await fetch(`${supabaseUrl}/functions/v1/send-domain-alert`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseAnonKey}`,
         },
         body: JSON.stringify({
           wallet_address: wallet,
@@ -138,6 +146,8 @@ export function AlertsTab({ walletAddress }: AlertsTabProps) {
       })
 
       if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Edge function error:', errorText)
         throw new Error('Failed to send immediate email')
       }
     } catch (error) {
@@ -218,7 +228,7 @@ export function AlertsTab({ walletAddress }: AlertsTabProps) {
             ) : (
               <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
             )}
-            <p className={saveStatus.type === 'success' ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}>
+            <p className="text-black dark:text-white font-medium">
               {saveStatus.message}
             </p>
           </div>
@@ -245,7 +255,7 @@ export function AlertsTab({ walletAddress }: AlertsTabProps) {
               </p>
               <button
                 onClick={() => setShowNewForm(true)}
-                className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                className="px-6 py-3 bg-[#163C6D] text-white rounded-lg hover:bg-[#1a4a85] transition-colors font-medium"
               >
                 Create Alert
               </button>
@@ -349,8 +359,8 @@ export function AlertsTab({ walletAddress }: AlertsTabProps) {
                       key={freq}
                       className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 cursor-pointer transition-all ${
                         formData.frequency === freq
-                          ? 'border-primary bg-primary/10'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-primary/50'
+                          ? 'border-[#163C6D] bg-[#163C6D] text-white font-bold'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-[#163C6D]/50 font-medium'
                       }`}
                     >
                       <input
@@ -362,25 +372,37 @@ export function AlertsTab({ walletAddress }: AlertsTabProps) {
                         className="sr-only"
                       />
                       <Calendar className="w-4 h-4" />
-                      <span className="font-medium capitalize">{freq}</span>
+                      <span className="capitalize">{freq}</span>
                     </label>
                   ))}
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-wrap gap-3 pt-4">
                 <button
                   onClick={handleSave}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+                  disabled={saving}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-[#163C6D] text-white rounded-lg hover:bg-[#1a4a85] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Save className="w-4 h-4" />
-                  {editingId ? 'Update Alert' : 'Create Alert & Send Now'}
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      {editingId ? 'Updating...' : 'Creating...'}
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      {editingId ? 'Update Alert' : 'Create Alert & Send Now'}
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="px-6 py-3 border rounded-lg hover:bg-muted transition-colors font-medium"
+                  disabled={saving}
+                  className="flex items-center gap-2 px-6 py-3 border border-gray-300 bg-white rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <X className="w-4 h-4" />
+                  Cancel
                 </button>
               </div>
             </div>
@@ -400,7 +422,7 @@ export function AlertsTab({ walletAddress }: AlertsTabProps) {
                           <Mail className="w-4 h-4 text-primary" />
                           <span className="font-semibold">{alert.email}</span>
                           {alert.active && (
-                            <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                            <span className="px-2 py-0.5 text-xs rounded-full bg-[#CDEFD8] text-black font-medium">
                               Active
                             </span>
                           )}
@@ -433,22 +455,22 @@ export function AlertsTab({ walletAddress }: AlertsTabProps) {
 
                     <div className="flex flex-wrap gap-2">
                       {alert.track_favorites && (
-                        <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded">
+                        <span className="px-2 py-1 text-xs rounded bg-[#E6EEFF] text-black font-medium">
                           Favorites
                         </span>
                       )}
                       {alert.track_my_domains && (
-                        <span className="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded">
+                        <span className="px-2 py-1 text-xs rounded bg-[#EFE6FF] text-black font-medium">
                           My Domains
                         </span>
                       )}
                       {alert.track_trends && (
-                        <span className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
+                        <span className="px-2 py-1 text-xs rounded bg-[#E6F7EB] text-black font-medium">
                           Trends
                         </span>
                       )}
                       {alert.track_other && (
-                        <span className="px-2 py-1 text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded">
+                        <span className="px-2 py-1 text-xs rounded bg-[#FFEFD6] text-black font-medium">
                           Custom: {alert.track_other}
                         </span>
                       )}

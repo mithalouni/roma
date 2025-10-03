@@ -141,7 +141,7 @@ export function GeminiChatbot({ domainContext }: GeminiChatbotProps) {
       {/* Floating Circle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-purple-600 to-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group z-50"
+        className="fixed bottom-6 right-6 w-16 h-16 bg-[#163C6D] text-white rounded-full shadow-lg hover:shadow-xl hover:bg-[#1a4a85] transition-all duration-300 flex items-center justify-center group z-50"
         aria-label="AI Advisor"
       >
         {isOpen ? (
@@ -149,7 +149,7 @@ export function GeminiChatbot({ domainContext }: GeminiChatbotProps) {
         ) : (
           <div className="relative">
             <MessageCircle className="w-6 h-6" />
-            <Sparkles className="w-3 h-3 absolute -top-1 -right-1 text-yellow-300 animate-pulse" />
+            <Sparkles className="w-3 h-3 absolute -top-1 -right-1 text-yellow-400 animate-pulse" />
           </div>
         )}
       </button>
@@ -158,12 +158,12 @@ export function GeminiChatbot({ domainContext }: GeminiChatbotProps) {
       {isOpen && (
         <div className="fixed bottom-24 right-6 w-96 h-[600px] bg-white dark:bg-gray-800 rounded-lg shadow-2xl flex flex-col z-50 border border-gray-200 dark:border-gray-700">
           {/* Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 rounded-t-lg flex items-center justify-between">
+          <div className="bg-[#163C6D] text-white p-4 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5" />
               <div>
                 <h3 className="font-semibold">AI Domain Advisor</h3>
-                <p className="text-xs opacity-90">Powered by Gemini 2.5 Flash</p>
+                <p className="text-xs opacity-90">Powered by Gemini</p>
               </div>
             </div>
             <button
@@ -184,7 +184,7 @@ export function GeminiChatbot({ domainContext }: GeminiChatbotProps) {
                 <div
                   className={`max-w-[80%] rounded-lg p-3 ${
                     message.role === 'user'
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-[#163C6D] text-white'
                       : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700'
                   }`}
                 >
@@ -216,7 +216,7 @@ export function GeminiChatbot({ domainContext }: GeminiChatbotProps) {
                     </p>
                     {message.isStreaming && (
                       <div className="flex gap-1">
-                        <div className="w-1 h-1 bg-purple-600 rounded-full animate-pulse" />
+                        <div className="w-1 h-1 bg-[#163C6D] rounded-full animate-pulse" />
                       </div>
                     )}
                   </div>
@@ -227,9 +227,9 @@ export function GeminiChatbot({ domainContext }: GeminiChatbotProps) {
               <div className="flex justify-start">
                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                   <div className="flex gap-2">
-                    <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <div className="w-2 h-2 bg-[#163C6D] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 bg-[#163C6D] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-2 h-2 bg-[#163C6D] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>
@@ -247,13 +247,13 @@ export function GeminiChatbot({ domainContext }: GeminiChatbotProps) {
                 onChange={e => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Ask about this domain..."
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#163C6D] focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 disabled={isLoading}
               />
               <button
                 onClick={handleSendMessage}
                 disabled={!inputMessage.trim() || isLoading}
-                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="bg-[#163C6D] text-white px-4 py-2 rounded-lg hover:bg-[#1a4a85] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Send className="w-5 h-5" />
               </button>

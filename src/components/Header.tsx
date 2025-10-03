@@ -19,15 +19,12 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-[#0540AD]">
+    <header className="sticky top-0 z-50 w-full border-b bg-[#163C6D]">
       <div className="container w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 mx-auto">
         {/* First Row: Logo, Search, Wallet */}
         <div className="flex h-16 items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-white">
-              <BarChart3 className="h-5 w-5 text-[#0540AD]" />
-            </div>
-            <span className="text-lg font-bold text-white">Doma Analytics</span>
+            <img src="/logo.png" alt="Doma Analytics" className="h-16 w-auto" />
           </Link>
 
           <form onSubmit={handleSearch} className="flex-1 max-w-md mx-4">

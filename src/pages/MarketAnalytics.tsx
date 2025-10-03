@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, PieChart, Users, Clock } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, PieChart, Users, Clock, LoaderCircle } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
 import { useDashboardStats, useMarketActivity } from '../hooks/useDomaData'
 import { formatCurrency } from '../lib/utils'
 import { LineChart, Line, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-
+import { TooltipProvider } from '@radix-ui/react-tooltip'
 import { ANALYTICS_TIME_RANGES, type AnalyticsTimeRange } from '../types/analytics'
 
 const timeRangeLabels: Record<AnalyticsTimeRange, string> = {
@@ -248,25 +248,31 @@ export function MarketAnalytics() {
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
 
+  if (isLoading && !dashboardData && !activityData) {
+    return (
+      <TooltipProvider delayDuration={200}>
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <LoaderCircle className="h-12 w-12 animate-spin text-primary" aria-hidden />
+            <p className="text-lg font-medium text-muted-foreground">Loading market analytics...</p>
+          </div>
+        </main>
+      </TooltipProvider>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <main className="container py-6 space-y-6">
-        {/* Header */}
-        <div className="space-y-4">
-          <div className="flex items-start justify-between">
+    <TooltipProvider delayDuration={200}>
+      <main className="min-h-screen bg-gray-50 py-8">
+        <div className="container w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 mx-auto space-y-8">
+          {/* Header */}
+          <div className="space-y-4">
             <div>
-              <h1 className="text-4xl font-bold tracking-tight flex items-center gap-3">
-                <BarChart3 className="w-8 h-8 text-blue-600" />
+              <h1 className="text-4xl font-bold tracking-tight">
                 Domain Marketplace Analytics
               </h1>
               <p className="text-muted-foreground mt-2">
                 Deep dive into domain trading trends, pricing patterns, and marketplace activity
-              </p>
-              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">
-                  Domain Marketplace Data
-                </span>
-                <span>Showing domain-specific transactions from the Doma marketplace (not total blockchain transactions)</span>
               </p>
             </div>
 
@@ -279,7 +285,7 @@ export function MarketAnalytics() {
                   disabled={isFilteringData}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-all disabled:opacity-50 ${
                     timeRange === range
-                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      ? 'bg-white text-gray-900 shadow-sm'
                       : 'text-muted-foreground hover:text-foreground hover:bg-background'
                   }`}
                 >
@@ -289,32 +295,7 @@ export function MarketAnalytics() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-sm">
-            <span className="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">
-              📊 Testnet Data
-            </span>
-            <span className="px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 font-medium flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {timeRangeLabels[timeRange]}
-            </span>
-            <span className="text-muted-foreground">
-              Updated: {new Date().toLocaleString()}
-            </span>
-          </div>
-        </div>
-
-        {isLoading && (
-          <Card>
-            <CardContent className="py-12">
-              <div className="flex items-center justify-center gap-4">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                <p className="text-muted-foreground">Loading market analytics...</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {!isLoading && dashboardData && activityData && marketMetrics && (
+        {dashboardData && activityData && marketMetrics && (
           <>
             {/* All-Time Marketplace Summary */}
             <Card className="border-l-4 border-l-blue-600">
@@ -543,7 +524,8 @@ export function MarketAnalytics() {
             </div>
           </>
         )}
+        </div>
       </main>
-    </div>
+    </TooltipProvider>
   )
 }

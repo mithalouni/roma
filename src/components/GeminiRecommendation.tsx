@@ -64,15 +64,12 @@ export function GeminiRecommendation({
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 p-6">
+      <div className="rounded-lg border bg-white p-6 h-full flex flex-col">
         <div className="flex items-center gap-2 mb-4">
           <Sparkles className="h-5 w-5 text-primary animate-pulse" />
           <h3 className="font-semibold text-lg">AI-Powered Analysis</h3>
-          <span className="text-xs rounded-full bg-primary/20 px-2 py-0.5 text-primary font-medium">
-            Gemini 2.5 Flash
-          </span>
         </div>
-        <div className="flex items-center justify-center py-8">
+        <div className="flex items-center justify-center py-8 flex-1">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
           <span className="ml-3 text-sm text-muted-foreground">Analyzing domain with Google Gemini AI...</span>
         </div>
@@ -97,16 +94,11 @@ export function GeminiRecommendation({
   }
 
   return (
-    <div className="rounded-lg border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 p-6 space-y-5">
+    <div className="rounded-lg border bg-white p-6 space-y-5 h-full">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <h3 className="font-semibold text-lg">AI-Powered Analysis</h3>
-        </div>
-        <span className="text-xs rounded-full bg-primary/20 px-2.5 py-1 text-primary font-medium">
-          Gemini 2.5 Flash
-        </span>
+      <div className="flex items-center gap-2">
+        <Sparkles className="h-5 w-5 text-primary" />
+        <h3 className="font-semibold text-lg">AI-Powered Analysis</h3>
       </div>
 
       {/* Recommendation */}
@@ -185,13 +177,6 @@ export function GeminiRecommendation({
           </ul>
         </div>
       )}
-
-      {/* Disclaimer */}
-      <div className="pt-3 border-t">
-        <p className="text-xs text-muted-foreground italic">
-          💡 AI-generated analysis powered by Google Gemini. Always conduct your own research before making investment decisions.
-        </p>
-      </div>
     </div>
   )
 }

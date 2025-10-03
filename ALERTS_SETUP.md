@@ -10,7 +10,7 @@ The alert system allows users to receive personalized domain recommendations via
 - Market trends
 - Custom keywords
 
-Emails are generated using Gemini AI and sent via Resend API.
+Emails are generated using Gemini AI and sent via Maileroo API.
 
 ## Architecture
 
@@ -38,7 +38,7 @@ You need to set the following secrets in your Supabase project:
 # Navigate to Supabase Dashboard > Project Settings > Edge Functions > Secrets
 
 # Required secrets:
-RESEND_API_KEY=re_FrCNcJao_AjSQ7mnVS8Ks48XDMdq2iHnk
+MAILEROO_API_KEY=2c3fd4667ad6276c87096197bea17af46d29415803ca4ea1fb393a51ace29c8e
 GEMINI_API_KEY=AIzaSyCPl_k64zVSRZKbDjAHxStCcnYwJ7uLdxk
 SUPABASE_URL=https://bxlksmhjzndopuavihlw.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
@@ -57,7 +57,7 @@ supabase login
 supabase link --project-ref bxlksmhjzndopuavihlw
 
 # Set secrets
-supabase secrets set RESEND_API_KEY=re_FrCNcJao_AjSQ7mnVS8Ks48XDMdq2iHnk
+supabase secrets set MAILEROO_API_KEY=2c3fd4667ad6276c87096197bea17af46d29415803ca4ea1fb393a51ace29c8e
 supabase secrets set GEMINI_API_KEY=AIzaSyCPl_k64zVSRZKbDjAHxStCcnYwJ7uLdxk
 supabase secrets set SUPABASE_URL=https://bxlksmhjzndopuavihlw.supabase.co
 supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
@@ -68,19 +68,22 @@ supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
 2. Navigate to: Settings > API
 3. Copy the `service_role` key (NOT the anon key)
 
-### 2. Configure Resend Email Domain (Optional but Recommended)
+### 2. Configure Maileroo Email Domain (Optional but Recommended)
 
-For production use, configure a custom domain in Resend:
+For production use, configure a custom domain in Maileroo:
 
-1. Go to [Resend Dashboard](https://resend.com/domains)
+1. Go to [Maileroo Dashboard](https://maileroo.com/domains)
 2. Add your domain (e.g., `doma.xyz`)
 3. Update DNS records as instructed
 4. Update the `from` field in `send-domain-alert` function:
    ```typescript
-   from: 'Doma Analytics <alerts@yourdomain.com>'
+   from: {
+     address: 'alerts@yourdomain.com',
+     display_name: 'Doma Analytics'
+   }
    ```
 
-For testing, the current Resend account can send from `noreply@doma.xyz` without additional setup.
+For testing, the current Maileroo account can send from `noreply@doma.xyz` without additional setup.
 
 ### 3. Set Up Cron Job
 
@@ -152,7 +155,7 @@ jobs:
    - Formats email with HTML/CSS
 
 3. **Email Delivery**:
-   - Send via Resend API
+   - Send via Maileroo API
    - Track delivery status
    - Update `last_sent_at` and `next_send_at` in database
 
@@ -218,7 +221,7 @@ CREATE TABLE user_alerts (
 
 **Email not received?**
 - Check spam/junk folder
-- Verify Resend API key is correct
+- Verify Maileroo API key is correct
 - Check Edge Function logs for errors
 - Ensure email address is valid
 
@@ -275,7 +278,7 @@ VITE_GEMINI_API_KEY=AIzaSyCPl_k64zVSRZKbDjAHxStCcnYwJ7uLdxk
 
 **Supabase Secrets (Edge Functions)**
 ```bash
-RESEND_API_KEY=re_...
+MAILEROO_API_KEY=2c3fd4667ad6276c87096197bea17af46d29415803ca4ea1fb393a51ace29c8e
 GEMINI_API_KEY=AIzaSy...
 SUPABASE_URL=https://bxlksmhjzndopuavihlw.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -305,5 +308,5 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 For issues or questions:
 - Check Edge Function logs in Supabase Dashboard
 - Review this documentation
-- Check Resend delivery logs
+- Check Maileroo delivery logs at https://maileroo.com/dashboard
 - Verify all API keys are correct
