@@ -7,6 +7,8 @@ import { formatAddress, formatCurrency, formatDateTime } from '../lib/utils'
 import { calculateDomainValueScore } from '../services/domaService'
 import { DomainPriceChart } from '../components/DomainPriceChart'
 import { DomainValueAnalysis } from '../components/DomainValueAnalysis'
+import { GeminiRecommendation } from '../components/GeminiRecommendation'
+import { GeminiChatbot } from '../components/GeminiChatbot'
 
 const formatIsoDateTime = (iso?: string | null) => {
   if (!iso) return '—'
@@ -110,6 +112,59 @@ export function DomainDetails() {
 
         {data && (
           <>
+            {/* AI Advisor Chatbot */}
+            {valueScore && transactionHistory && (
+              <GeminiChatbot
+                domainContext={{
+                  domainName: data.domainName,
+                  aiScore: valueScore.overallScore,
+                  transactionCount: transactionHistory.filter(tx => tx.type === 'PURCHASED').length,
+                  averagePrice:
+                    transactionHistory
+                      .filter(tx => tx.type === 'PURCHASED' && tx.priceUsd > 0)
+                      .reduce((sum, tx) => sum + tx.priceUsd, 0) /
+                    Math.max(transactionHistory.filter(tx => tx.type === 'PURCHASED' && tx.priceUsd > 0).length, 1),
+                  priceChange: (() => {
+                    const purchases = transactionHistory.filter(tx => tx.type === 'PURCHASED' && tx.priceUsd > 0)
+                    if (purchases.length < 2) return 0
+                    const latest = purchases[0].priceUsd
+                    const oldest = purchases[purchases.length - 1].priceUsd
+                    return oldest > 0 ? ((latest - oldest) / oldest) * 100 : 0
+                  })(),
+                  activeOffers: data.activeOffersCount,
+                  isFractionalized: data.isFractionalized,
+                  recentActivity: transactionHistory.slice(0, 3).map(tx =>
+                    `${tx.type} ${tx.priceUsd > 0 ? `for $${tx.priceUsd.toFixed(2)}` : ''}`
+                  ).join(', '),
+                  valueAnalysis: `${valueScore.recommendation.replace('_', ' ').toUpperCase()} - ${valueScore.analysis.insights[0] || 'N/A'}`
+                }}
+              />
+            )}
+
+            {/* Gemini AI Recommendation */}
+            {valueScore && transactionHistory && (
+              <GeminiRecommendation
+                domainName={data.domainName}
+                aiScore={valueScore.overallScore}
+                transactionCount={transactionHistory.filter(tx => tx.type === 'PURCHASED').length}
+                averagePrice={
+                  transactionHistory
+                    .filter(tx => tx.type === 'PURCHASED' && tx.priceUsd > 0)
+                    .reduce((sum, tx) => sum + tx.priceUsd, 0) /
+                  Math.max(transactionHistory.filter(tx => tx.type === 'PURCHASED' && tx.priceUsd > 0).length, 1)
+                }
+                priceChange={(() => {
+                  const purchases = transactionHistory.filter(tx => tx.type === 'PURCHASED' && tx.priceUsd > 0)
+                  if (purchases.length < 2) return 0
+                  const latest = purchases[0].priceUsd
+                  const oldest = purchases[purchases.length - 1].priceUsd
+                  return oldest > 0 ? ((latest - oldest) / oldest) * 100 : 0
+                })()}
+                activeOffers={data.activeOffersCount}
+                isFractionalized={data.isFractionalized}
+              />
+            )}
+
             {/* AI Value Analysis */}
             {valueScore && transactionHistory && transactionHistory.length > 0 && (
               <Card>
